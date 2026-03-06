@@ -1,5 +1,5 @@
 """
-CRISPS GC Discord Bot — discord.py rewrite (24/7)
+CRISPS GC Discord Bot
 All commands, scheduled tasks, and event handlers in one file.
 """
 
@@ -34,40 +34,27 @@ intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Fixed question schedules (Manila timezone)
-# Chill: 12:00 PM, Warm (Hot): 8:00 PM, Typology: 12:00 AM
 QUESTION_SCHEDULES = {
-    "chill": {"hour": 12, "minute": 0},     # 12:00 PM
-    "warm": {"hour": 20, "minute": 0},      # 8:00 PM (Hot)
-    "typology": {"hour": 0, "minute": 0},   # 12:00 AM (midnight)
+    "chill": {"hour": 12, "minute": 0},
+    "warm": {"hour": 20, "minute": 0},
+    "typology": {"hour": 0, "minute": 0},
 }
 
 
-# ======================== HARDCODED CONFIG (Single Server) ========================
-# This bot is designed for a single server, so we hardcode all the IDs
-
 HARDCODED = {
-    # Ping roles
     "ping_role_warm": "1470111504954032300",
     "ping_role_chill": "1470111189869527131",
     "ping_role_typology": "1470111535559999590",
-    
-    # Channels
-    "channel_warm": "1470111942696767548",      # #qotd
-    "channel_chill": "1470111942696767548",     # #qotd
-    "channel_typology": "1450418107368738848",  # #typology
-    "channel_codepurple": "1446277377771573402", # #general
-    "channel_activity_rewards": "1446277377771573402",  # #general
-    "channel_chatter_rewards": "1470204258992390164",   # #daily-reward
-    
-    # Reaction role picker message IDs
+    "channel_warm": "1470111942696767548",
+    "channel_chill": "1470111942696767548",
+    "channel_typology": "1450418107368738848",
+    "channel_codepurple": "1446277377771573402",
+    "channel_activity_rewards": "1446277377771573402",
+    "channel_chatter_rewards": "1470204258992390164",
     "role_picker_message_warm": "1470113538994606160",
     "role_picker_message_chill": "1470113556476334182",
     "role_picker_message_typology": "1470113576017723564",
-    
-    # Blacklist categories (all channels in these categories are blacklisted from chip drops)
     "blacklist_categories": ["1446269291123966044", "1446277444372791458"],
-    # Blacklist specific channels from chip drops
     "blacklist_channels": [],
 }
 
@@ -107,7 +94,7 @@ def _embed(title: str, description: str, color_key: str, footer: str = "", autho
 
 
 def format_story(words_str: str) -> str:
-    """Format raw word tokens into a clean story string.
+    """Format raw word tokens into a clean story string
     - Punctuation attaches to previous word (no space before)
     - Auto-lowercase everything
     - Capitalize first character
@@ -124,7 +111,7 @@ def format_story(words_str: str) -> str:
     for token in tokens:
         is_punct = all(c in PUNCT for c in token)
         if is_punct and result:
-            result[-1] += token  # Attach to previous word
+            result[-1] += token
         else:
             result.append(token.lower())
 
@@ -136,7 +123,6 @@ def format_story(words_str: str) -> str:
 
 # ======================== TYPOLOGY FORMATTING ========================
 
-# Superscript mapping for tritype wings
 SUPERSCRIPT_MAP = {"w": "ʷ", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "?": "ˀ"}
 SUBSCRIPT_MAP = {"0": "₀", "1": "₁", "2": "₂", "3": "₃", "4": "₄", "5": "₅", "6": "₆", "7": "₇", "8": "₈", "9": "₉"}
 
@@ -196,7 +182,6 @@ def format_tritype(raw: str) -> str:
 def format_instinct(raw: str) -> str:
     """Format instinctual stacking: 'so/sp', 'so/?', 'sp/sx', etc."""
     raw = raw.strip().lower().replace(" ", "")
-    # Valid instincts
     instincts = ["so", "sp", "sx", "?"]
     parts = raw.split("/")
     if len(parts) == 2 and parts[0] in instincts and parts[1] in instincts:
@@ -207,7 +192,6 @@ def format_instinct(raw: str) -> str:
 def format_ap(raw: str) -> str:
     """Format Attitudinal Psyche: 'fvle' → 'FVLE', allows ? for unknowns."""
     raw = raw.strip().upper()
-    # Valid AP letters
     valid = set("FVLE?")
     if len(raw) == 4 and all(c in valid for c in raw):
         return raw
@@ -236,20 +220,17 @@ def get_mbti_display(mbti: str) -> str:
 
 def build_typology_embed(target: discord.Member, profile: dict | None, attach_mbti: bool = False) -> tuple[discord.Embed, discord.File | None]:
     """Build a typology profile embed. Returns (embed, file) where file is the MBTI avatar if available."""
-    # Extract values or use "?" for empty
     mbti = profile.get("mbti", "") if profile else ""
     enneagram = profile.get("enneagram", "") if profile else ""
     tritype = profile.get("tritype", "") if profile else ""
     instinct = profile.get("instinct", "") if profile else ""
     ap = profile.get("ap", "") if profile else ""
     
-    # Build display values
     mbti_display = get_mbti_display(mbti) if mbti else "?"
     enneagram_display = enneagram or "?"
     tritype_display = tritype or "?"
     ap_display = ap or "?"
     
-    # Instinct with core type annotation if available
     if instinct and enneagram:
         core = enneagram[0] if enneagram else ""
         dom = instinct.split("/")[0] if "/" in instinct else instinct
@@ -257,12 +238,9 @@ def build_typology_embed(target: discord.Member, profile: dict | None, attach_mb
     else:
         instinct_display = instinct or "?"
     
-    # Build embed
     color = get_mbti_color(mbti)
-    
     embed = discord.Embed(color=color)
     
-    # Add fields in clean list format
     profile_text = (
         f"**MBTI:** {mbti_display}\n"
         f"**Enneagram:** {enneagram_display}\n"
@@ -271,12 +249,8 @@ def build_typology_embed(target: discord.Member, profile: dict | None, attach_mb
         f"**AP:** {ap_display}"
     )
     embed.description = profile_text
-    
-    # User's profile picture on the right (thumbnail)
     embed.set_thumbnail(url=target.display_avatar.url)
     
-    # MBTI avatar as tiny author icon + display name
-    # Store user ID in author URL (invisible) for !update tracking
     id_url = f"https://typology.id/{target.id}"
     file = None
     if attach_mbti and mbti:
@@ -308,7 +282,6 @@ async def post_warm(guild_id: str, ping: bool = True, channel: discord.TextChann
         print(f"[Warm] Could not find channel")
         return
 
-    # Type bag: pick category first (cycles through all 3 before repeating)
     categories = ["wyr", "debate", "button"]
     category_map = {
         "wyr": (config.SPARK_WYR, "warm_wyr", "Would You Rather"),
@@ -327,10 +300,8 @@ async def post_warm(guild_id: str, ping: bool = True, channel: discord.TextChann
     selected_cat = categories[type_idx]
     questions, qtype_key, display_name = category_map[selected_cat]
     
-    # Question bag: pick question from selected category
     question = await get_unused_question(guild_id, qtype_key, questions)
 
-    # Increment and get question counter
     count_str = await db.get_state(guild_id, "warm_question_count") or "0"
     count = int(count_str) + 1
     await db.set_state(guild_id, "warm_question_count", str(count))
@@ -360,7 +331,6 @@ async def post_chill(guild_id: str, ping: bool = True, channel: discord.TextChan
         print(f"[Chill] Could not find channel")
         return
 
-    # Type bag: pick category first (cycles through both before repeating)
     categories = ["chill", "lifestyle"]
     category_map = {
         "chill": (config.SPARK_CHILL, "chill_chill", "Chill Vibes"),
@@ -378,10 +348,8 @@ async def post_chill(guild_id: str, ping: bool = True, channel: discord.TextChan
     selected_cat = categories[type_idx]
     questions, qtype_key, display_name = category_map[selected_cat]
     
-    # Question bag: pick question from selected category
     question = await get_unused_question(guild_id, qtype_key, questions)
 
-    # Increment and get question counter
     count_str = await db.get_state(guild_id, "chill_question_count") or "0"
     count = int(count_str) + 1
     await db.set_state(guild_id, "chill_question_count", str(count))
@@ -411,7 +379,6 @@ async def post_typology(guild_id: str, ping: bool = True, channel: discord.TextC
         print(f"[Typology] Could not find channel")
         return
 
-    # Type bag: pick category first (cycles through all 3 before repeating)
     categories = ["comparing", "personal", "friendgroup"]
     
     used_types = await db.get_used_questions(guild_id, "typology_type")
@@ -425,7 +392,6 @@ async def post_typology(guild_id: str, ping: bool = True, channel: discord.TextC
     category = categories[type_idx]
     
     if category == "comparing":
-        # Generate MBTI x Enneagram comparison question
         type1 = f"{random.choice(config.MBTI_TYPES)} {random.choice(config.ENNEAGRAM_TYPES)}"
         type2 = type1
         while type2 == type1:
@@ -435,17 +401,14 @@ async def post_typology(guild_id: str, ping: bool = True, channel: discord.TextC
         description = f"**{type1}** or **{type2}**\n\n{question_template}"
         footer_text = "Comparing Types"
     elif category == "personal":
-        # Personal typology nerd question
         question = await get_unused_question(guild_id, "typology_personal", config.PERSONAL_TYPOLOGY_QUESTIONS)
         description = question
         footer_text = "Personal Typology"
     else:
-        # Friend group "most likely to" question
         question = await get_unused_question(guild_id, "typology_friendgroup", config.FRIEND_GROUP_QUESTIONS)
         description = question
         footer_text = "Friend Group"
     
-    # Increment and get question counter
     count_str = await db.get_state(guild_id, "typology_question_count") or "0"
     count = int(count_str) + 1
     await db.set_state(guild_id, "typology_question_count", str(count))
@@ -525,7 +488,6 @@ async def do_chip_drop(guild_id: str, channel_id: str = None):
         print(f"[ChipDrop] Could not find channel {channel_id}")
         return
     
-    # Check if channel is in a blacklisted category or is a blacklisted channel
     if channel.category_id and str(channel.category_id) in HARDCODED["blacklist_categories"]:
         print(f"[ChipDrop] Channel {channel_id} is in blacklisted category, skipping")
         return
@@ -533,7 +495,6 @@ async def do_chip_drop(guild_id: str, channel_id: str = None):
         print(f"[ChipDrop] Channel {channel_id} is blacklisted, skipping")
         return
 
-    # Check if there's already an active drop
     existing = await db.get_chip_drop(guild_id)
     if existing:
         return
@@ -542,7 +503,6 @@ async def do_chip_drop(guild_id: str, channel_id: str = None):
     amount = random.randint(config.CHIP_DROP["min_amount"], config.CHIP_DROP["max_amount"])
     emoji = config.CHIPS["emoji"]
     
-    # 20% chance for math, 80% for grab
     if random.random() < config.CHIP_DROP["math_chance"]:
         equation, answer = generate_math_question()
         announcement = config.MESSAGES["chip_drop"]["math_announcement"].format(
@@ -573,7 +533,6 @@ async def check_chip_drop_expired(guild_id: str):
     
     elapsed = (datetime.now(timezone.utc) - created).total_seconds()
     if elapsed >= config.CHIP_DROP["timeout"]:
-        # Expired
         channel = bot.get_channel(int(drop["channel_id"]))
         if channel:
             try:
@@ -605,7 +564,6 @@ async def check_code_purple(guild_id: str):
     if hours < config.CODE_PURPLE["inactivity_hours"]:
         return
 
-    # Check cooldown
     last_purple = await db.get_state(guild_id, "last_code_purple")
     if last_purple:
         lp = datetime.fromisoformat(last_purple)
@@ -623,7 +581,6 @@ async def check_code_purple(guild_id: str):
 
 
 async def do_chatter_rewards(guild_id: str):
-    # Chatter rewards post to #daily-reward (no ping)
     channel_id = HARDCODED["channel_chatter_rewards"]
     if not channel_id:
         return
@@ -731,7 +688,6 @@ async def schedule_loop():
     for guild in bot.guilds:
         gid = str(guild.id)
 
-        # --- Daily Questions (fixed Manila times) ---
         for qtype, sched in QUESTION_SCHEDULES.items():
             if now_manila.hour == sched["hour"] and now_manila.minute == sched["minute"]:
                 # Check if already posted recently (within 23 hours) - prevents race conditions
@@ -746,7 +702,6 @@ async def schedule_loop():
                         should_post = False
                 
                 if should_post:
-                    # Mark as posted BEFORE posting (prevents duplicates)
                     await db.set_state(gid, f"last_{qtype}_question", now_utc.isoformat())
                     
                     post_fn = QUESTION_POST_FNS.get(qtype)
@@ -770,14 +725,12 @@ async def schedule_loop():
                 if hours_since < 23:  # Posted within last 23 hours = skip
                     should_post = False
             if should_post:
-                # Mark BEFORE posting
                 await db.set_state(gid, "last_chatter_post", now_utc.isoformat())
                 try:
                     await do_chatter_rewards(gid)
                 except Exception as e:
                     print(f"Error doing chatter rewards: {e}")
 
-        # --- Activity Rewards (fixed Manila time) - DISABLED by default ---
         act_sched = config.ACTIVITY_REWARDS
         if now_manila.hour == act_sched["hour"] and now_manila.minute == act_sched["minute"]:
             if config.FEATURES.get("activity_rewards"):
@@ -797,11 +750,9 @@ async def schedule_loop():
                     except Exception as e:
                         print(f"Error doing activity rewards: {e}")
 
-        # --- Code Purple (every hour) ---
         if now_manila.minute == 0:
             await check_code_purple(gid)
 
-        # --- Word Game Auto-Start (check every 10 minutes) ---
         if now_manila.minute % 10 == 0:
             try:
                 await auto_start_word_game(gid)
@@ -812,7 +763,6 @@ async def schedule_loop():
 @schedule_loop.before_loop
 async def before_schedule():
     await bot.wait_until_ready()
-    # Random delay (0-30 sec) to desync multiple bot instances during Railway deploys
     await asyncio.sleep(random.uniform(0, 30))
 
 
@@ -821,7 +771,6 @@ async def chip_drop_cycle():
     await bot.wait_until_ready()
     
     while not bot.is_closed():
-        # Check every minute
         await asyncio.sleep(60)
         
         if not config.FEATURES.get("chip_drops"):
@@ -830,15 +779,12 @@ async def chip_drop_cycle():
         for guild in bot.guilds:
             gid = str(guild.id)
             try:
-                # Check for expired drops
                 await check_chip_drop_expired(gid)
                 
-                # Check if there's already an active drop
                 existing = await db.get_chip_drop(gid)
                 if existing:
                     continue
                 
-                # Check cooldown from last claimed drop
                 last_drop = await db.get_state(gid, "last_chip_drop_claimed")
                 if last_drop:
                     last_dt = datetime.fromisoformat(last_drop)
@@ -852,7 +798,6 @@ async def chip_drop_cycle():
                         if hours_passed < float(cooldown):
                             continue
                 
-                # Check if there was any activity in last 30 minutes
                 last_msg = await db.get_state(gid, "last_message_time")
                 if not last_msg:
                     continue
@@ -865,15 +810,12 @@ async def chip_drop_cycle():
                 if mins_since_activity > config.CHIP_DROP["activity_window"]:
                     continue
                 
-                # Check if we need to schedule a drop
                 scheduled = await db.get_state(gid, "chip_drop_scheduled_at")
                 if not scheduled:
-                    # Schedule a drop in 1-60 minutes
                     delay = random.randint(config.CHIP_DROP["min_delay"], config.CHIP_DROP["max_delay"])
                     drop_time = datetime.now(timezone.utc) + timedelta(minutes=delay)
                     await db.set_state(gid, "chip_drop_scheduled_at", drop_time.isoformat())
                 else:
-                    # Check if scheduled time has passed
                     sched_dt = datetime.fromisoformat(scheduled)
                     if sched_dt.tzinfo is None:
                         sched_dt = sched_dt.replace(tzinfo=timezone.utc)
@@ -931,10 +873,8 @@ class WordGameActiveView(discord.ui.View):
         await db.end_word_game(gid)
         game = await db.get_word_game(gid)
         
-        # Track when game ended (for auto-restart detection)
         await db.set_state(gid, "last_wordgame_activity", datetime.now(timezone.utc).isoformat())
 
-        # Delete current message
         try:
             await interaction.message.delete()
         except Exception:
@@ -971,7 +911,6 @@ class WordGameStartView(discord.ui.View):
         except Exception:
             pass
 
-        # Start new game in a NEW message
         embed = build_word_game_embed("", 0, True)
         view = WordGameActiveView()
         msg = await interaction.channel.send(embed=embed, view=view)
@@ -1058,7 +997,6 @@ async def auto_start_word_game(gid: str) -> bool:
     except Exception:
         pass
     
-    # Start new game silently
     embed = build_word_game_embed("", 0, True)
     view = WordGameActiveView()
     msg = await channel.send(embed=embed, view=view)
@@ -1142,28 +1080,6 @@ async def leaderboard_cmd(interaction: discord.Interaction):
 
     await interaction.response.send_message(embed=embed)
 
-
-# Slash command commented out - using !typology prefix command for cleaner UX
-# @bot.tree.command(name="typology", description="Add someone's typology card")
-# @app_commands.describe(user="The user to create a card for (defaults to yourself)")
-# async def typology_cmd(interaction: discord.Interaction, user: Optional[discord.Member] = None):
-#     """Create a typology profile card for a user."""
-#     target = user or interaction.user
-#     gid = str(interaction.guild_id)
-#     uid = str(target.id)
-#     
-#     # Get profile data
-#     profile = await db.get_typology_profile(gid, uid)
-#     
-#     # Build embed with MBTI avatar
-#     embed, file = build_typology_embed(target, profile, attach_mbti=True)
-#     
-#     if file:
-#         await interaction.response.send_message(embed=embed, file=file)
-#     else:
-#         await interaction.response.send_message(embed=embed)
-
-
 # ---------- Admin ----------
 
 
@@ -1209,7 +1125,6 @@ async def exportdata_cmd(interaction: discord.Interaction):
     chip_count = len(chips_data)
     bag_count = len(questions_data)
     
-    # Send as file if too long, otherwise as message
     if len(encoded) > 1900:
         await interaction.response.send_message(
             f"**Data Export** ({chip_count} users, {bag_count} question bags)\nData too long, sending as file:",
@@ -1230,7 +1145,6 @@ async def importdata_cmd(interaction: discord.Interaction, data: str):
     gid = str(interaction.guild_id)
     
     try:
-        # Decode and decompress
         compressed = base64.b64decode(data.strip())
         json_str = zlib.decompress(compressed).decode('utf-8')
         import_data = json.loads(json_str)
@@ -1238,23 +1152,18 @@ async def importdata_cmd(interaction: discord.Interaction, data: str):
         if not isinstance(import_data, dict):
             raise ValueError("Invalid data format")
         
-        # Handle both old format (chips only) and new format (chips + questions)
         if "chips" in import_data:
-            # New format
             chips_data = import_data.get("chips", {})
             questions_data = import_data.get("questions", {})
         else:
-            # Old format (backwards compatible) - just chips
             chips_data = import_data
             questions_data = {}
         
-        # Import chip data
         chip_count = 0
         for uid, chips in chips_data.items():
             await db.set_chips(gid, str(uid), f"User_{uid}", int(chips))
             chip_count += 1
         
-        # Import question usage data
         if questions_data:
             await db.import_question_usage(gid, questions_data)
         bag_count = len(questions_data)
@@ -1283,46 +1192,6 @@ async def codepurple_cmd(interaction: discord.Interaction):
     await db.set_state(gid, "last_code_purple", datetime.now(timezone.utc).isoformat())
     await interaction.response.send_message(f"Code purple posted to <#{channel_id}>", ephemeral=True)
 
-
-# COMMENTED OUT - Using hardcoded channels (v1.55)
-# @bot.tree.command(name="setchannel", description="Set a channel for bot features (admin only)")
-# @app_commands.default_permissions(administrator=True)
-# @app_commands.describe(feature="Feature to configure", channel="Channel (defaults to current)")
-# @app_commands.choices(
-#     feature=[
-#         app_commands.Choice(name="Warm Questions", value="warm"),
-#         app_commands.Choice(name="Chill Questions", value="chill"),
-#         app_commands.Choice(name="Typology Questions", value="typology"),
-#         app_commands.Choice(name="Code Purple", value="codepurple"),
-#         app_commands.Choice(name="Activity Rewards", value="activity_rewards"),
-#         app_commands.Choice(name="Word Game", value="wordgame"),
-#     ]
-# )
-# async def setchannel_cmd(
-#     interaction: discord.Interaction,
-#     feature: app_commands.Choice[str],
-#     channel: discord.TextChannel = None,
-# ):
-#     target = channel or interaction.channel
-#     gid = str(interaction.guild_id)
-#     await db.set_channel(gid, feature.value, str(target.id))
-#
-#     # If setting word game channel, always send "Start new story" embed
-#     if feature.value == "wordgame":
-#         await interaction.response.defer(ephemeral=True)
-#         embed = discord.Embed(
-#             title="📖 Word Game",
-#             description="*Click the button below to start a new story!*",
-#             color=int(config.WORD_GAME["embed"]["color"], 16),
-#         )
-#         embed.set_footer(text="One word per message • Punctuation auto-formats")
-#         view = WordGameStartView()
-#         await target.send(embed=embed, view=view)
-#         await interaction.followup.send(f"{feature.name} channel set to {target.mention}", ephemeral=True)
-#     else:
-#         await interaction.response.send_message(f"{feature.name} channel set to {target.mention}", ephemeral=True)
-
-
 @bot.tree.command(name="viewchannels", description="View current channel settings (admin only)")
 @app_commands.default_permissions(administrator=True)
 async def viewchannels_cmd(interaction: discord.Interaction):
@@ -1346,32 +1215,6 @@ async def viewchannels_cmd(interaction: discord.Interaction):
     lines.append("*Config is hardcoded in bot.py*")
 
     await interaction.response.send_message("\n".join(lines), ephemeral=True)
-
-
-# COMMENTED OUT - Using hardcoded category blacklist (v1.55)
-# @bot.tree.command(name="blacklistchannel", description="Blacklist a channel from chip drops (admin only)")
-# @app_commands.default_permissions(administrator=True)
-# @app_commands.describe(channel="Channel to blacklist")
-# async def blacklistchannel_cmd(interaction: discord.Interaction, channel: discord.TextChannel):
-#     gid = str(interaction.guild_id)
-#     added = await db.add_blacklisted_channel(gid, str(channel.id))
-#     if added:
-#         await interaction.response.send_message(f"✅ {channel.mention} blacklisted from chip drops", ephemeral=True)
-#     else:
-#         await interaction.response.send_message(f"⚠️ {channel.mention} is already blacklisted", ephemeral=True)
-#
-#
-# @bot.tree.command(name="unblacklistchannel", description="Remove a channel from chip drop blacklist (admin only)")
-# @app_commands.default_permissions(administrator=True)
-# @app_commands.describe(channel="Channel to unblacklist")
-# async def unblacklistchannel_cmd(interaction: discord.Interaction, channel: discord.TextChannel):
-#     gid = str(interaction.guild_id)
-#     removed = await db.remove_blacklisted_channel(gid, str(channel.id))
-#     if removed:
-#         await interaction.response.send_message(f"✅ {channel.mention} removed from blacklist", ephemeral=True)
-#     else:
-#         await interaction.response.send_message(f"⚠️ {channel.mention} wasn't blacklisted", ephemeral=True)
-
 
 @bot.tree.command(name="viewschedule", description="View upcoming scheduled posts (admin only)")
 @app_commands.default_permissions(administrator=True)
@@ -1502,70 +1345,6 @@ QUESTION_FEATURE_NAMES = {
     "typology": "✨ Typology Questions",
 }
 
-
-# COMMENTED OUT - Using hardcoded ping roles and role picker messages (v1.55)
-# @bot.tree.command(name="setpingrole", description="Set the role to ping for a daily question type (admin only)")
-# @app_commands.default_permissions(administrator=True)
-# @app_commands.describe(feature="Which daily question type", role="The role to ping")
-# @app_commands.choices(
-#     feature=[
-#         app_commands.Choice(name="Warm Questions", value="warm"),
-#         app_commands.Choice(name="Chill Questions", value="chill"),
-#         app_commands.Choice(name="Typology Questions", value="typology"),
-#     ]
-# )
-# async def setpingrole_cmd(interaction: discord.Interaction, feature: app_commands.Choice[str], role: discord.Role):
-#     gid = str(interaction.guild_id)
-#     await db.set_state(gid, f"ping_role_{feature.value}", str(role.id))
-#     await interaction.response.send_message(f"{feature.name} ping role set to {role.mention}", ephemeral=True)
-#
-#
-# @bot.tree.command(name="placepingrolepicker", description="Post a reaction role picker for a daily question type (admin only)")
-# @app_commands.default_permissions(administrator=True)
-# @app_commands.describe(feature="Which daily question type")
-# @app_commands.choices(
-#     feature=[
-#         app_commands.Choice(name="Warm Questions", value="warm"),
-#         app_commands.Choice(name="Chill Questions", value="chill"),
-#         app_commands.Choice(name="Typology Questions", value="typology"),
-#     ]
-# )
-# async def placepingrolepicker_cmd(interaction: discord.Interaction, feature: app_commands.Choice[str]):
-#     gid = str(interaction.guild_id)
-#     role_id = await db.get_state(gid, f"ping_role_{feature.value}")
-#     if not role_id:
-#         await interaction.response.send_message(
-#             f"No ping role set for {feature.name}! Use `/setpingrole {feature.value}` first.", ephemeral=True
-#         )
-#         return
-#
-#     feature_name = QUESTION_FEATURE_NAMES[feature.value]
-#     
-#     # Feature descriptions
-#     feature_descriptions = {
-#         "warm": "Would You Rather, debates, and Press the Button questions",
-#         "chill": "Chill vibes and lifestyle-related questions",
-#         "typology": "Typology-related questions, comparing types, and friend group questions",
-#     }
-#     
-#     # Remove emoji from feature name for description text
-#     feature_name_no_emoji = feature_name.split(" ", 1)[1]  # Remove first word (emoji)
-#     description_text = feature_descriptions.get(feature.value, "")
-#     
-#     embed = discord.Embed(
-#         title=f"🔔 {feature_name} Notifications",
-#         description=f"React with 👍 to get the <@&{role_id}> role and be pinged for {feature_name_no_emoji}\n\n**Includes:** {description_text}",
-#         color=int(config.COLORS[feature.value], 16),
-#     )
-#     embed.set_footer(text="Unreact to remove the role.")
-#
-#     await interaction.response.defer(ephemeral=True)
-#     msg = await interaction.channel.send(embed=embed)
-#     await msg.add_reaction("👍")
-#     await db.set_state(gid, f"role_picker_message_{feature.value}", str(msg.id))
-#     await interaction.followup.send(f"{feature.name} role picker posted! ✅", ephemeral=True)
-
-
 # ======================== EVENTS ========================
 
 
@@ -1574,7 +1353,6 @@ async def on_ready():
     if not hasattr(bot, "_initialized"):
         bot._initialized = True
         await db.init()
-        # Register persistent views so buttons survive restarts
         bot.add_view(WordGameActiveView())
         bot.add_view(WordGameStartView())
         bot.add_view(NewQuestionView("warm"))
@@ -1675,11 +1453,9 @@ async def on_message(message: discord.Message):
     gid = str(message.guild.id)
     uid = str(message.author.id)
 
-    # Track activity for code purple
     await db.set_state(gid, "last_message_time", datetime.now(timezone.utc).isoformat())
     await db.set_state(gid, "last_message_channel", str(message.channel.id))
     
-    # Anti-spam: Only count activity if message sent >3 seconds after user's last message
     now = datetime.now(timezone.utc)
     last_msg_key = f"user_last_msg_{uid}"
     last_msg_time = await db.get_state(gid, last_msg_key)
@@ -1776,7 +1552,6 @@ async def on_message(message: discord.Message):
             except Exception:
                 pass
         
-        # Start new game in current channel
         embed = build_word_game_embed("", 0, True)
         view = WordGameActiveView()
         msg = await message.channel.send(embed=embed, view=view)
@@ -1978,7 +1753,6 @@ async def on_message(message: discord.Message):
         print(f"[WordGame] Valid={valid} (single={is_single_word}, short={is_short}, notlink={is_not_link}, notmention={is_not_mention}, chars={is_word_chars})")
 
         if valid:
-            # Same person can't go twice in a row
             if game["last_contributor_id"] == str(message.author.id):
                 try:
                     await message.channel.send(
@@ -1993,7 +1767,6 @@ async def on_message(message: discord.Message):
                 await db.set_state(gid, "last_wordgame_activity", datetime.now(timezone.utc).isoformat())
                 game = await db.get_word_game(gid)
 
-                # Delete old bot message (forward pattern)
                 try:
                     old_msg = await message.channel.fetch_message(int(game["message_id"]))
                     await old_msg.delete()
