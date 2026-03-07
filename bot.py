@@ -219,15 +219,22 @@ def check_haiku(text: str) -> tuple[bool, list[str] | None]:
 
 
 async def get_unused_question(guild_id: str, qtype: str, questions: list[str]) -> str:
-    """Pick a random unused question (bag randomizer — no repeats until all used)."""
+    """Pick a random unused question (bag randomizer — no repeats until all used).
+    Uses text-based tracking so adding/removing questions won't break the bag.
+    """
     used = await db.get_used_questions(guild_id, qtype)
     if len(used) >= len(questions):
         await db.reset_questions(guild_id, qtype)
         used = []
-    available = [i for i in range(len(questions)) if i not in used]
-    idx = random.choice(available)
-    await db.mark_question_used(guild_id, qtype, idx)
-    return questions[idx]
+    # Filter to questions not in the used set
+    available = [q for q in questions if q not in used]
+    if not available:
+        # Fallback if all are somehow used
+        await db.reset_questions(guild_id, qtype)
+        available = questions
+    chosen = random.choice(available)
+    await db.mark_question_used(guild_id, qtype, chosen)
+    return chosen
 
 
 def _embed(title: str, description: str, color_key: str, footer: str = "", author: bool = True) -> discord.Embed:
@@ -440,15 +447,15 @@ async def post_warm(guild_id: str, ping: bool = True, channel: discord.TextChann
         "button": (config.BUTTON_QUESTIONS, "warm_button", "Press The Button"),
     }
     
+    # Use text-based tracking for category rotation
     used_types = await db.get_used_questions(guild_id, "warm_type")
     if len(used_types) >= len(categories):
         await db.reset_questions(guild_id, "warm_type")
         used_types = []
-    available_types = [i for i in range(len(categories)) if i not in used_types]
-    type_idx = random.choice(available_types)
-    await db.mark_question_used(guild_id, "warm_type", type_idx)
+    available_types = [cat for cat in categories if cat not in used_types]
+    selected_cat = random.choice(available_types)
+    await db.mark_question_used(guild_id, "warm_type", selected_cat)
     
-    selected_cat = categories[type_idx]
     questions, qtype_key, display_name = category_map[selected_cat]
     
     question = await get_unused_question(guild_id, qtype_key, questions)
@@ -488,15 +495,15 @@ async def post_chill(guild_id: str, ping: bool = True, channel: discord.TextChan
         "lifestyle": (config.PERSONALITY_QUESTIONS, "chill_lifestyle", "Lifestyle"),
     }
     
+    # Use text-based tracking for category rotation
     used_types = await db.get_used_questions(guild_id, "chill_type")
     if len(used_types) >= len(categories):
         await db.reset_questions(guild_id, "chill_type")
         used_types = []
-    available_types = [i for i in range(len(categories)) if i not in used_types]
-    type_idx = random.choice(available_types)
-    await db.mark_question_used(guild_id, "chill_type", type_idx)
+    available_types = [cat for cat in categories if cat not in used_types]
+    selected_cat = random.choice(available_types)
+    await db.mark_question_used(guild_id, "chill_type", selected_cat)
     
-    selected_cat = categories[type_idx]
     questions, qtype_key, display_name = category_map[selected_cat]
     
     question = await get_unused_question(guild_id, qtype_key, questions)
@@ -532,51 +539,51 @@ async def post_typology(guild_id: str, ping: bool = True, channel: discord.TextC
 
     categories = ["matchups", "hottakes", "scenarios"]
     
+    # Use text-based tracking for category rotation
     used_types = await db.get_used_questions(guild_id, "typology_type")
     if len(used_types) >= len(categories):
         await db.reset_questions(guild_id, "typology_type")
         used_types = []
-    available_types = [i for i in range(len(categories)) if i not in used_types]
-    type_idx = random.choice(available_types)
-    await db.mark_question_used(guild_id, "typology_type", type_idx)
+    available_types = [cat for cat in categories if cat not in used_types]
+    category = random.choice(available_types)
+    await db.mark_question_used(guild_id, "typology_type", category)
     
-    category = categories[type_idx]
     reactions_to_add = []
     
     if category == "matchups":
-        # Pick unused matchup
+        # Pick unused matchup using type combo as key
         matchups = config.REALISTIC_TYPE_MATCHUPS
         used_matchups = await db.get_used_questions(guild_id, "typology_matchups")
-        if len(used_matchups) >= len(matchups):
+        # Build available matchups (key = "type1 vs type2")
+        available_matchups = [m for m in matchups if f"{m['type1']} vs {m['type2']}" not in used_matchups]
+        if not available_matchups:
             await db.reset_questions(guild_id, "typology_matchups")
-            used_matchups = []
-        available_matchups = [i for i in range(len(matchups)) if i not in used_matchups]
-        matchup_idx = random.choice(available_matchups)
-        await db.mark_question_used(guild_id, "typology_matchups", matchup_idx)
+            available_matchups = matchups
+        matchup = random.choice(available_matchups)
+        matchup_key = f"{matchup['type1']} vs {matchup['type2']}"
+        await db.mark_question_used(guild_id, "typology_matchups", matchup_key)
         
-        matchup = matchups[matchup_idx]
         question = random.choice(matchup["questions"])
         description = f"1️⃣ **{matchup['type1']}**  vs  2️⃣ **{matchup['type2']}**\n\n{question}"
         footer_text = "Type Matchup"
         reactions_to_add = ["1️⃣", "2️⃣"]
     elif category == "hottakes":
-        # Pick unused hot take
+        # Pick unused hot take (already text-based via get_unused_question)
         hot_take = await get_unused_question(guild_id, "typology_hottakes", config.TYPOLOGY_HOT_TAKES)
-        description = f"🔥 **Hot Take**\n\n\"{hot_take}\"\n\n👍 Agree  ·  👎 Disagree"
+        description = f"\n\"{hot_take}\"\n\n👍 Agree  ·  👎 Disagree"
         footer_text = "Hot Take"
         reactions_to_add = ["👍", "👎"]
     else:
-        # Pick unused scenario
+        # Pick unused scenario using scenario text as key
         scenarios = config.SCENARIO_ROLE_ASSIGNMENTS
         used_scenarios = await db.get_used_questions(guild_id, "typology_scenarios")
-        if len(used_scenarios) >= len(scenarios):
+        available_scenarios = [s for s in scenarios if s["scenario"] not in used_scenarios]
+        if not available_scenarios:
             await db.reset_questions(guild_id, "typology_scenarios")
-            used_scenarios = []
-        available_scenarios = [i for i in range(len(scenarios)) if i not in used_scenarios]
-        scenario_idx = random.choice(available_scenarios)
-        await db.mark_question_used(guild_id, "typology_scenarios", scenario_idx)
+            available_scenarios = scenarios
+        scenario = random.choice(available_scenarios)
+        await db.mark_question_used(guild_id, "typology_scenarios", scenario["scenario"])
         
-        scenario = scenarios[scenario_idx]
         roles_list = "\n".join([f"• {role}" for role in scenario["roles"]])
         description = f"🎬 **{scenario['scenario']}**\n\nAssign roles to the group:\n{roles_list}"
         footer_text = "Scenario Roles"
@@ -908,6 +915,8 @@ async def schedule_loop():
                 await db.set_state(gid, "last_chatter_post", now_utc.isoformat())
                 try:
                     await do_chatter_rewards(gid)
+                    # Auto-save after chatter rewards
+                    await do_autosave(gid)
                 except Exception as e:
                     print(f"Error doing chatter rewards: {e}")
 
@@ -1299,7 +1308,7 @@ async def exportdata_cmd(interaction: discord.Interaction):
     
     chip_count = len(chips_data)
     bag_count = len(questions_data)
-    total_questions = sum(len(indices) for indices in questions_data.values())
+    total_questions = sum(len(keys) for keys in questions_data.values())
     
     stats = f"**Data Export** ({chip_count} users, {bag_count} question bags, {total_questions} questions used)"
     
@@ -1355,6 +1364,54 @@ async def importdata_cmd(interaction: discord.Interaction, data: str):
             f"❌ Failed to import: Invalid data format. Make sure you copied the entire string from `/exportdata`.\nError: {str(e)}",
             ephemeral=True
         )
+
+
+async def do_autosave(guild_id: str):
+    """Auto-save bot data by editing the backup message."""
+    backup_msg_id = await db.get_state(guild_id, "backup_message_id")
+    if not backup_msg_id:
+        return
+    
+    # Find the message - check all text channels
+    backup_msg = None
+    for channel in bot.get_all_channels():
+        if isinstance(channel, discord.TextChannel):
+            try:
+                backup_msg = await channel.fetch_message(int(backup_msg_id))
+                break
+            except Exception:
+                continue
+    
+    if not backup_msg:
+        print(f"[Autosave] Could not find backup message {backup_msg_id}")
+        return
+    
+    # Build export data
+    all_chips = await db.get_all_chips(guild_id)
+    chips_data = {uid: chips for uid, _, chips in all_chips}
+    questions_data = await db.get_all_question_usage(guild_id)
+    
+    export_data = {
+        "chips": chips_data,
+        "questions": questions_data,
+    }
+    
+    json_str = json.dumps(export_data, separators=(',', ':'))
+    compressed = zlib.compress(json_str.encode('utf-8'), level=9)
+    encoded = base64.b64encode(compressed).decode('ascii')
+    
+    # Timestamp
+    now = datetime.now(MANILA_TZ)
+    timestamp = now.strftime("%b %d, %Y at %I:%M %p")
+    
+    # Edit the message
+    new_content = f"```\n{encoded}\n```\nLast saved: {timestamp}"
+    
+    try:
+        await backup_msg.edit(content=new_content)
+        print(f"[Autosave] Updated backup for guild {guild_id}")
+    except Exception as e:
+        print(f"[Autosave] Failed to edit message: {e}")
 
 
 @bot.tree.command(name="codepurple", description="Force a Code Purple message (admin only)")
@@ -1549,53 +1606,57 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
         return
     
     # --- Hall of Fame: forward messages with 4+ reactions of the SAME emoji ---
-    # (Temporarily set to 1 😭 for testing)
-    HOF_THRESHOLD = 4 # Change back to 4 after testing
+    # Only for messages from real users (not bots)
+    HOF_THRESHOLD = 4
     hof_channel_id = HARDCODED.get("channel_hall_of_fame")
     if hof_channel_id and payload.message_id not in _hall_of_fame_forwarded:
         try:
             channel = bot.get_channel(payload.channel_id)
             if channel:
                 message = await channel.fetch_message(payload.message_id)
-                # Check if any single emoji has reached threshold
-                qualifying_reaction = None
-                for r in message.reactions:
-                    if r.count >= HOF_THRESHOLD:
-                        qualifying_reaction = r
-                        break
-                if qualifying_reaction:
-                    # Mark as forwarded to prevent duplicates
-                    _hall_of_fame_forwarded.add(payload.message_id)
-                    
-                    hof_channel = bot.get_channel(int(hof_channel_id))
-                    if hof_channel:
-                        # Build the forward embed
-                        embed = discord.Embed(
-                            description=message.content or "*[No text content]*",
-                            color=discord.Color.gold(),
-                            timestamp=message.created_at
-                        )
-                        embed.set_author(
-                            name=message.author.display_name,
-                            icon_url=message.author.display_avatar.url if message.author.display_avatar else None
-                        )
-                        embed.add_field(
-                            name="Reactions",
-                            value=" ".join([f"{r.emoji} {r.count}" for r in message.reactions]),
-                            inline=False
-                        )
-                        embed.add_field(
-                            name="Source",
-                            value=f"[Jump to message]({message.jump_url})",
-                            inline=False
-                        )
+                # Skip bot messages (polls, reaction roles, etc.)
+                if message.author.bot:
+                    pass  # Don't process bot messages for Hall of Fame
+                else:
+                    # Check if any single emoji has reached threshold
+                    qualifying_reaction = None
+                    for r in message.reactions:
+                        if r.count >= HOF_THRESHOLD:
+                            qualifying_reaction = r
+                            break
+                    if qualifying_reaction:
+                        # Mark as forwarded to prevent duplicates
+                        _hall_of_fame_forwarded.add(payload.message_id)
                         
-                        # Handle attachments
-                        if message.attachments:
-                            embed.set_image(url=message.attachments[0].url)
-                        
-                        await hof_channel.send(embed=embed)
-                        print(f"[HallOfFame] Forwarded message {payload.message_id}")
+                        hof_channel = bot.get_channel(int(hof_channel_id))
+                        if hof_channel:
+                            # Build the forward embed
+                            embed = discord.Embed(
+                                description=message.content or "*[No text content]*",
+                                color=discord.Color.gold(),
+                                timestamp=message.created_at
+                            )
+                            embed.set_author(
+                                name=message.author.display_name,
+                                icon_url=message.author.display_avatar.url if message.author.display_avatar else None
+                            )
+                            embed.add_field(
+                                name="Reactions",
+                                value=" ".join([f"{r.emoji} {r.count}" for r in message.reactions]),
+                                inline=False
+                            )
+                            embed.add_field(
+                                name="Source",
+                                value=f"[Jump to message]({message.jump_url})",
+                                inline=False
+                            )
+                            
+                            # Handle attachments
+                            if message.attachments:
+                                embed.set_image(url=message.attachments[0].url)
+                            
+                            await hof_channel.send(embed=embed)
+                            print(f"[HallOfFame] Forwarded message {payload.message_id}")
         except Exception as e:
             print(f"[HallOfFame] Error: {e}")
     
@@ -2017,6 +2078,17 @@ async def on_message(message: discord.Message):
                 view = WordGameActiveView()
                 new_msg = await message.channel.send(embed=embed, view=view)
                 await db.update_word_game_message(gid, str(new_msg.id))
+
+    # --- !placedata command (temporary, for setting up backup message) ---
+    if content_lower == "!placedata":
+        if message.author.guild_permissions.administrator:
+            gid = str(message.guild.id)
+            now = datetime.now(MANILA_TZ)
+            timestamp = now.strftime("%b %d, %Y at %I:%M %p")
+            backup_msg = await message.channel.send(f"```\n\n```\nLast saved: {timestamp}")
+            await db.set_state(gid, "backup_message_id", str(backup_msg.id))
+            await message.reply(f"Backup message placed! ID: `{backup_msg.id}`", mention_author=False)
+        return
 
     await bot.process_commands(message)
 

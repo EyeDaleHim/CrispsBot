@@ -141,7 +141,7 @@ async def init():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 guild_id TEXT NOT NULL,
                 question_type TEXT NOT NULL,
-                question_index INTEGER NOT NULL,
+                question_index TEXT NOT NULL,
                 used_at TEXT DEFAULT ''
             );
 
@@ -186,6 +186,8 @@ async def init():
             "UPDATE bot_state SET key = 'channel_chill' WHERE key = 'channel_personality'",
             "UPDATE bot_state SET key = 'ping_role_chill' WHERE key = 'ping_role_personality'",
             "UPDATE bot_state SET key = 'role_picker_message_chill' WHERE key = 'role_picker_message_personality'",
+            # v2: Clear old index-based question data (now text-based) - only affects old integer entries
+            """DELETE FROM question_usage WHERE typeof(question_index) = 'integer'""",
         ]
         for sql in migrations:
             await conn.execute(sql)
@@ -321,7 +323,8 @@ async def clear_daily_chatter(guild_id: str, date: str):
 
 # ==================== QUESTION USAGE ====================
 
-async def get_used_questions(guild_id: str, question_type: str) -> list[int]:
+async def get_used_questions(guild_id: str, question_type: str) -> list[str]:
+    """Get list of used question keys (text-based) for a question type."""
     async with get_connection() as conn:
         cursor = await conn.execute(
             "SELECT question_index FROM question_usage WHERE guild_id = ? AND question_type = ?",
@@ -331,11 +334,12 @@ async def get_used_questions(guild_id: str, question_type: str) -> list[int]:
         return [r[0] for r in rows]
 
 
-async def mark_question_used(guild_id: str, question_type: str, index: int):
+async def mark_question_used(guild_id: str, question_type: str, question_key: str):
+    """Mark a question as used by its text key."""
     async with get_connection() as conn:
         await conn.execute(
             "INSERT INTO question_usage (guild_id, question_type, question_index, used_at) VALUES (?, ?, ?, ?)",
-            (guild_id, question_type, index, datetime.now(timezone.utc).isoformat())
+            (guild_id, question_type, question_key, datetime.now(timezone.utc).isoformat())
         )
         await conn.commit()
 
@@ -349,34 +353,34 @@ async def reset_questions(guild_id: str, question_type: str):
         await conn.commit()
 
 
-async def get_all_question_usage(guild_id: str) -> dict[str, list[int]]:
-    """Get all question usage data for export. Returns {question_type: [indices]}."""
+async def get_all_question_usage(guild_id: str) -> dict[str, list[str]]:
+    """Get all question usage data for export. Returns {question_type: [text_keys]}."""
     async with get_connection() as conn:
         cursor = await conn.execute(
             "SELECT question_type, question_index FROM question_usage WHERE guild_id = ?",
             (guild_id,)
         )
         rows = await cursor.fetchall()
-        result: dict[str, list[int]] = {}
-        for qtype, idx in rows:
+        result: dict[str, list[str]] = {}
+        for qtype, key in rows:
             if qtype not in result:
                 result[qtype] = []
-            result[qtype].append(idx)
+            result[qtype].append(key)
         return result
 
 
-async def import_question_usage(guild_id: str, data: dict[str, list[int]]):
-    """Import question usage data. Clears existing data first."""
+async def import_question_usage(guild_id: str, data: dict[str, list[str]]):
+    """Import question usage data (text-based keys). Clears existing data first."""
     async with get_connection() as conn:
         # Clear existing question usage for this guild
         await conn.execute("DELETE FROM question_usage WHERE guild_id = ?", (guild_id,))
         # Import new data
         now = datetime.now(timezone.utc).isoformat()
-        for qtype, indices in data.items():
-            for idx in indices:
+        for qtype, keys in data.items():
+            for key in keys:
                 await conn.execute(
                     "INSERT INTO question_usage (guild_id, question_type, question_index, used_at) VALUES (?, ?, ?, ?)",
-                    (guild_id, qtype, idx, now)
+                    (guild_id, qtype, key, now)
                 )
         await conn.commit()
 
