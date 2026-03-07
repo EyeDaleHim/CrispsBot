@@ -663,6 +663,204 @@ REALISTIC_TYPE_MATCHUPS = [
             "Who handles criticism more personally?",
         ]
     },
+    {
+        "type1": "INFP 4w3",
+        "type2": "ESTP 8w7",
+        "questions": [
+            "Who's more likely to take a risk on something they believe in?",
+            "Who would you trust more to defend you in public?",
+            "Who processes their failures more internally?",
+            "Who would you rather have wingman you at a party?",
+            "Who's more likely to say what you need to hear vs what you want to hear?",
+        ]
+    },
+    {
+        "type1": "INTP 9w1",
+        "type2": "ESFJ 2w1",
+        "questions": [
+            "Who would you trust more with a secret you're ashamed of?",
+            "Who remembers birthdays and anniversaries better?",
+            "Who's more likely to avoid conflict until it explodes?",
+            "Who would you rather have plan a surprise party?",
+            "Who's more secretly competitive?",
+        ]
+    },
+    {
+        "type1": "ENFJ 3w2",
+        "type2": "ISTJ 6w5",
+        "questions": [
+            "Who would you trust more to follow through consistently?",
+            "Who's better at reading what people actually need?",
+            "Who handles being underestimated better?",
+            "Who would you rather have manage a long-term project?",
+            "Who's more likely to sacrifice their needs for others?",
+        ]
+    },
+    {
+        "type1": "ISFP 4w3",
+        "type2": "ENTP 8w7",
+        "questions": [
+            "Who's more authentic in high-stakes situations?",
+            "Who would you trust to challenge your beliefs respectfully?",
+            "Who handles creative rejection better?",
+            "Who would you rather brainstorm with at 3am?",
+            "Who's more likely to burn bridges they shouldn't?",
+        ]
+    },
+    {
+        "type1": "ESTJ 3w2",
+        "type2": "INFJ 9w1",
+        "questions": [
+            "Who would you trust to organize a complex event?",
+            "Who understands unspoken dynamics better?",
+            "Who's more likely to overcommit and resent it?",
+            "Who gives more actionable advice?",
+            "Who handles being wrong more gracefully?",
+        ]
+    },
+    {
+        "type1": "ESFP 3w2",
+        "type2": "INTJ 5w4",
+        "questions": [
+            "Who's more fun to be stuck in an airport with?",
+            "Who would you trust for long-term strategic advice?",
+            "Who handles social rejection worse?",
+            "Who's more likely to remember what you were wearing?",
+            "Who would you rather have coach you through failure?",
+        ]
+    },
+    {
+        "type1": "ISTP 5w4",
+        "type2": "ENFP 7w6",
+        "questions": [
+            "Who handles unexpected problems more calmly?",
+            "Who makes new friends faster?",
+            "Who's more likely to hyperfixate on something obscure?",
+            "Who would you trust to keep you grounded?",
+            "Who handles boredom worse?",
+        ]
+    },
+    {
+        "type1": "ENTJ 3w4",
+        "type2": "ISFJ 9w1",
+        "questions": [
+            "Who would you trust to get results under pressure?",
+            "Who makes you feel more emotionally safe?",
+            "Who's harder to say no to?",
+            "Who handles failure more privately?",
+            "Who would you rather have defend your reputation?",
+        ]
+    },
+    {
+        "type1": "INFJ 5w4",
+        "type2": "ENFP 3w2",
+        "questions": [
+            "Who understands your contradictions better?",
+            "Who's more likely to overcommit socially?",
+            "Who gives advice that's harder to hear?",
+            "Who handles spotlight better?",
+            "Who would you trust with your vulnerabilities?",
+        ]
+    },
+    {
+        "type1": "INTJ 5w4",
+        "type2": "ESFJ 6w7",
+        "questions": [
+            "Who's more likely to remember your coffee order?",
+            "Who handles group dynamics better?",
+            "Who gives more direct feedback?",
+            "Who would you trust to research something important?",
+            "Who's more secretly emotional?",
+        ]
+    },
+    {
+        "type1": "ENFJ 2w3",
+        "type2": "ISTP 5w6",
+        "questions": [
+            "Who would you trust to hype you up before something scary?",
+            "Who stays calmer in emergencies?",
+            "Who's more likely to overextend themselves?",
+            "Who gives less sugarcoated advice?",
+            "Who handles solitude better?",
+        ]
+    },
+    {
+        "type1": "INFP 6w7",
+        "type2": "ESTJ 3w2",
+        "questions": [
+            "Who handles anxiety more visibly?",
+            "Who would you trust to get things done on time?",
+            "Who's more likely to take criticism personally?",
+            "Who makes decisions faster?",
+            "Who's secretly more stubborn?",
+        ]
+    },
+    {
+        "type1": "ENTP 7w8",
+        "type2": "ISFP 6w7",
+        "questions": [
+            "Who's more likely to change topics mid-conversation?",
+            "Who handles criticism more gracefully?",
+            "Who would you trust more with something precious to you?",
+            "Who's more comfortable being alone?",
+            "Who handles commitment better?",
+        ]
+    },
+    {
+        "type1": "ESFP 8w7",
+        "type2": "INFJ 6w5",
+        "questions": [
+            "Who's more fun at a spontaneous event?",
+            "Who overthinks social interactions more?",
+            "Who would you want in your corner during confrontation?",
+            "Who's more likely to pick up on subtle tension?",
+            "Who handles being overlooked worse?",
+        ]
+    },
+    {
+        "type1": "ISTJ 5w6",
+        "type2": "ENFP 4w3",
+        "questions": [
+            "Who's more reliable with deadlines?",
+            "Who brings more creative energy?",
+            "Who handles change worse?",
+            "Who would you trust to remember important details?",
+            "Who's secretly more adventurous?",
+        ]
+    },
+    {
+        "type1": "ENTJ 8w9",
+        "type2": "ISFP 9w8",
+        "questions": [
+            "Who handles power dynamics better?",
+            "Who's easier to be authentic around?",
+            "Who's more likely to bulldoze over feelings?",
+            "Who handles being wrong more gracefully?",
+            "Who would you want leading in a crisis?",
+        ]
+    },
+    {
+        "type1": "INTP 4w5",
+        "type2": "ESFJ 1w2",
+        "questions": [
+            "Who's more likely to accidentally offend someone?",
+            "Who handles traditions better?",
+            "Who's more comfortable with emotional expression?",
+            "Who's secretly more insecure about being liked?",
+            "Who would you trust for unconventional solutions?",
+        ]
+    },
+    {
+        "type1": "ESTP 7w8",
+        "type2": "INFP 9w1",
+        "questions": [
+            "Who acts faster in an emergency?",
+            "Who's more in touch with their inner world?",
+            "Who handles conflict more directly?",
+            "Who's more likely to avoid difficult conversations?",
+            "Who would you want at a party?",
+        ]
+    },
 ]
 
 # ==================== TYPOLOGY HOT TAKES ====================
@@ -704,17 +902,6 @@ TYPOLOGY_HOT_TAKES = [
     "Type 6s are more capable than they believe.",
     "Type 7s are running from themselves, not toward experiences.",
     "Core type matters less than instinctual variant.",
-    
-    # Pairing/combo hot takes
-    "INFP 4s are the most stereotyped combo and it's usually wrong.",
-    "ENTJ 8s are rarer than the internet suggests.",
-    "INFJ 4s are just mistyped INFP 4s most of the time.",
-    "ENTP 7s are the most chaotic combo and it's not close.",
-    "ISFJ 9s are underrepresented in typology communities.",
-    "INTJ 5s are the most accurate stereotype.",
-    "ENFP 4s are more common than ENFP 7s.",
-    "ISTP 9s are underrated for their competence.",
-    "ESTJ 8s are actually more common than ENTJ 8s.",
     
     # Meta takes
     "Most people mistype because they type who they want to be, not who they are.",
@@ -787,1012 +974,224 @@ TYPOLOGY_HOT_TAKES = [
     "ISFPs are more stubborn than ENTJs.",
     "Sensors are actually better at abstract thinking, they just don't talk about it.",
     "Every type thinks they're the misunderstood one.",
+    
+    # More controversial takes
+    "Most 'developed' types are just trauma responses.",
+    "Fi users are more judgmental than Fe users, they just keep it internal.",
+    "Ne-doms are more scattered than creative.",
+    "Si-doms have better memory for facts, not just personal experiences.",
+    "Most ENFJs are more self-serving than they admit.",
+    "ISTPs are emotionally intelligent, they just don't care to show it.",
+    "Type 5s hoard knowledge because they're scared, not curious.",
+    "Most people's 'intuition' is just confirmation bias.",
+    "Healthy Type 8s are actually the most gentle people.",
+    "INFPs are more practical than INFJs in day-to-day life.",
+    "Te-doms are just as sensitive as Fi-doms, about different things.",
+    "Sexual instinct is just attachment issues rebranded.",
+    "Self-preservation 4s are the most mistyped subtype.",
+    "ENTPs argue to connect, not to win.",
+    "Most 'ambiverts' are just introverts with good social skills.",
+    "Type 3s are the most self-aware type, they just don't like what they see.",
+    "Ni isn't mystical, it's just pattern recognition with poor traceability.",
+    "ESFPs are more introspective than ENFPs.",
+    "The 'golden pair' compatibility theory is astrology for intellectuals.",
+    "Type 6s are actually the bravest type because they act despite fear.",
+    
+    # Even more hot takes
+    "Everyone thinks they're a rare type.",
+    "ISFJ 2s are the backbone of society and get zero credit.",
+    "Most people who claim to be 'logical thinkers' are just emotionally avoidant.",
+    "Se-doms are better listeners than they're given credit for.",
+    "Fi-doms have clearer values than Fe-doms.",
+    "ESFPs are more emotionally intelligent than ENFPs.",
+    "Type 7s are actually running toward things, not away from pain.",
+    "Healthy 9s are more assertive than healthy 8s need to be.",
+    "ISTPs make better partners than they get credit for.",
+    "ENTJs secretly want to be appreciated, not just respected.",
+    "Most INFJs use their 'rarity' as a crutch.",
+    "Type 1s are fun when they let go — which is rare.",
+    "Fe users are just as judgmental as Fi users, just quieter about it.",
+    "Sp/sx is the most underrated instinctual stacking.",
+    "Most INTPs are actually more social than they let on.",
+    "ESTJs are misunderstood because people mistake directness for coldness.",
+    "Ni-aux types are more grounded than Ni-dom types.",
+    "Your shadow functions matter more than your main stack.",
+    "Type 4s have the best aesthetic taste, but that's also their downfall.",
+    "Most 'highly sensitive people' are just unhealthy Fe or Fi users.",
+    "ISFPs are secret perfectionists.",
 ]
 
-# ==================== SCENARIO ROLE ASSIGNMENTS ====================
-# Assign roles to the friend group based on fun scenarios
+# ==================== TYPOLOGY WHO QUESTIONS ====================
+# Simple "who is most likely to" questions - specific situations, not clichés
 
-SCENARIO_ROLE_ASSIGNMENTS = [
-    {
-        "scenario": "Heist Movie",
-        "roles": [
-            "The Mastermind",
-            "The Muscle",
-            "The Tech Expert",
-            "The Wildcard",
-            "The One Who Accidentally Triggers the Alarm",
-        ]
-    },
-    {
-        "scenario": "Zombie Apocalypse",
-        "roles": [
-            "The Leader",
-            "The Medic",
-            "The Scout",
-            "The One Who Gets Bitten First",
-            "The One Who Survives Out of Pure Spite",
-        ]
-    },
-    {
-        "scenario": "Reality TV Show",
-        "roles": [
-            "The Winner",
-            "First Eliminated",
-            "The Villain Edit",
-            "Fan Favorite",
-            "The Chaos Agent",
-        ]
-    },
-    {
-        "scenario": "Road Trip",
-        "roles": [
-            "The Driver",
-            "The DJ",
-            "The Navigator Who Gets Everyone Lost",
-            "The Snack Manager",
-            "The One Who Falls Asleep Immediately",
-        ]
-    },
-    {
-        "scenario": "Murder Mystery Dinner",
-        "roles": [
-            "The Detective",
-            "The Victim",
-            "The Obvious Suspect",
-            "The Actual Killer",
-            "The Clueless Guest",
-        ]
-    },
-    {
-        "scenario": "Group Project",
-        "roles": [
-            "The One Who Does Everything",
-            "The Ideas Person (Who Does Nothing Else)",
-            "The One Who Shows Up the Night Before",
-            "The One Who Somehow Gets Full Credit",
-            "The One Who Disappears Completely",
-        ]
-    },
-    {
-        "scenario": "Startup Company",
-        "roles": [
-            "The Visionary CEO",
-            "The One Who Actually Runs Things",
-            "The First Hire Who Gets Pushed Out",
-            "The One Who Embezzles and Flees",
-            "The One Who Saw It Coming",
-        ]
-    },
-    {
-        "scenario": "Fantasy Adventure Party",
-        "roles": [
-            "The Paladin (Tank)",
-            "The Healer",
-            "The Rogue",
-            "The Wizard Who Keeps Casting Fireball",
-            "The Bard Who Won't Stop Flirting with NPCs",
-        ]
-    },
-    {
-        "scenario": "High School Reunion",
-        "roles": [
-            "The One Who Peaked in High School",
-            "The Glow-Up",
-            "The One Who Didn't Change At All",
-            "The One Nobody Remembers",
-            "The One Who Brought Drama",
-        ]
-    },
-    {
-        "scenario": "Escape Room",
-        "roles": [
-            "The One Who Solves Everything",
-            "The One Touching Things They Shouldn't",
-            "The One Reading Instructions Out Loud",
-            "The One Having an Existential Crisis",
-            "The One Who Just Vibes",
-        ]
-    },
-    {
-        "scenario": "Wedding Party",
-        "roles": [
-            "The Maid of Honor/Best Man",
-            "The One Who Gives the Awkward Speech",
-            "The One Who Hooks Up with Someone",
-            "The One Who Cries the Most",
-            "The One Who Catches the Bouquet",
-        ]
-    },
-    {
-        "scenario": "Cooking Competition",
-        "roles": [
-            "The One Who Actually Knows How to Cook",
-            "The One Who Sets Something on Fire",
-            "The One Making 'Deconstructed' Everything",
-            "The One Crying Over Onions",
-            "The One Who Just Orders Takeout",
-        ]
-    },
-    {
-        "scenario": "True Crime Podcast",
-        "roles": [
-            "The Host",
-            "The Researcher",
-            "The One Who Gets Too Invested",
-            "The One Who Keeps Derailing",
-            "The One Listeners Hate-Listen For",
-        ]
-    },
-    {
-        "scenario": "Haunted House",
-        "roles": [
-            "The One Who Says It's Not Real",
-            "The One Who Brought a Ouija Board",
-            "The One Who Screams At Everything",
-            "The One Who Gets Possessed",
-            "The One Who Befriends the Ghost",
-        ]
-    },
-    {
-        "scenario": "Band",
-        "roles": [
-            "Lead Singer",
-            "Guitarist Who Thinks They're the Star",
-            "Drummer Who Keeps the Whole Thing Together",
-            "Bassist Nobody Notices",
-            "The One Who Quits to Go Solo",
-        ]
-    },
-    {
-        "scenario": "Desert Island Survival",
-        "roles": [
-            "The One Who Builds Shelter",
-            "The One Who Finds Food",
-            "The One Who Becomes the Leader",
-            "The One Everyone Wants to Eat First",
-            "The One Who Gets Rescued and Doesn't Tell Anyone",
-        ]
-    },
-    {
-        "scenario": "Friend Group Sitcom",
-        "roles": [
-            "The Main Character",
-            "The Quirky One",
-            "The Voice of Reason",
-            "The One Dating Everyone",
-            "The Recurring Side Character",
-        ]
-    },
-    {
-        "scenario": "Office Drama",
-        "roles": [
-            "The Boss Who Shouldn't Be Boss",
-            "The One Who Does HR's Job",
-            "The One Starting All the Gossip",
-            "The One Who 'Works from Home'",
-            "The One Planning Their Escape",
-        ]
-    },
-    {
-        "scenario": "Space Crew",
-        "roles": [
-            "The Captain",
-            "The Engineer Who Keeps Everything Running",
-            "The Scientist Who Touches Alien Artifacts",
-            "The One Who Opens the Airlock by Accident",
-            "The Robot/AI Everyone Suspects",
-        ]
-    },
-    {
-        "scenario": "Game Night",
-        "roles": [
-            "The One Who Wins Everything",
-            "The Sore Loser",
-            "The One Who Takes Forever on Their Turn",
-            "The One Making Up Rules",
-            "The One Who Flips the Board",
-        ]
-    },
-    {
-        "scenario": "Camping Trip",
-        "roles": [
-            "The One Who Packed Everything",
-            "The One Who Forgot Their Sleeping Bag",
-            "The Fire Starter",
-            "The One Who Hears Scary Noises All Night",
-            "The One Who Wanted to Stay Home",
-        ]
-    },
-    {
-        "scenario": "Moving Day",
-        "roles": [
-            "The One Who Actually Shows Up",
-            "The One Who Lifts Nothing But Eats Everything",
-            "The One Who Organizes Too Much",
-            "The One Who Breaks Something",
-            "The One Who 'Had Something Come Up'",
-        ]
-    },
-    {
-        "scenario": "Apocalypse Bunker",
-        "roles": [
-            "The One Who Rations Resources",
-            "The One Who Tries to Leave",
-            "The One Everyone Suspects of Hiding Food",
-            "The One Who Keeps Morale Up",
-            "The One Who Snaps First",
-        ]
-    },
-    {
-        "scenario": "Courtroom Drama",
-        "roles": [
-            "The Defense Attorney",
-            "The Prosecutor",
-            "The Surprise Witness",
-            "The One Who Confesses Out of Nowhere",
-            "The Juror Who Falls Asleep",
-        ]
-    },
-    {
-        "scenario": "Podcast Team",
-        "roles": [
-            "The Main Host",
-            "The Research Nerd",
-            "The One Who Goes on Tangents",
-            "The One Who Edits Everything Out",
-            "The Guest Who Never Leaves",
-        ]
-    },
-    {
-        "scenario": "Secret Agent Team",
-        "roles": [
-            "The Handler",
-            "The Field Agent",
-            "The Double Agent",
-            "The Gadget Person",
-            "The One Who Blows Their Cover Immediately",
-        ]
-    },
-    {
-        "scenario": "Restaurant Kitchen",
-        "roles": [
-            "The Head Chef",
-            "The One Who Burns Water",
-            "The Perfectionist Who Takes Forever",
-            "The One Who Eats More Than They Cook",
-            "The One Who Quits Mid-Service",
-        ]
-    },
-    {
-        "scenario": "Group Chat",
-        "roles": [
-            "The One Who Sends 50 Messages in a Row",
-            "The Lurker",
-            "The One Who Only Reacts with Emojis",
-            "The One Who Changes the Topic",
-            "The One Who Mutes The Chat",
-        ]
-    },
-    {
-        "scenario": "College Group Project (Realistic)",
-        "roles": [
-            "The One Panicking at 11pm",
-            "The One Who Hasn't Started Their Part",
-            "The One Doing Everyone Else's Work",
-            "The One Who Disappeared After the First Meeting",
-            "The One Who Shows Up Just to Present",
-        ]
-    },
-    {
-        "scenario": "Gym Buddies",
-        "roles": [
-            "The Personal Trainer Energy",
-            "The One Who Only Does Cardio",
-            "The One Who Just Sits on Equipment",
-            "The One Taking Mirror Selfies",
-            "The One Who Cancels Every Time",
-        ]
-    },
-    {
-        "scenario": "Therapy Group",
-        "roles": [
-            "The One Who Fixes Everyone Else",
-            "The One Who Cries Every Session",
-            "The One Who Won't Share",
-            "The One Who Makes Everything About Themselves",
-            "The Therapist's Favorite",
-        ]
-    },
-    {
-        "scenario": "Bank Robbery (Hostages)",
-        "roles": [
-            "The One Who Tries to Negotiate",
-            "The One Who Makes Friends with the Robber",
-            "The One Having a Panic Attack",
-            "The One Planning an Escape",
-            "The One Who Sleeps Through It",
-        ]
-    },
-    {
-        "scenario": "Airplane Emergency",
-        "roles": [
-            "The Pilot Who Keeps Everyone Calm",
-            "The Flight Attendant Who Panics",
-            "The One Praying Loudly",
-            "The One Who Finished Their Drink First",
-            "The One Writing a Goodbye Note",
-        ]
-    },
-    {
-        "scenario": "Reality Dating Show",
-        "roles": [
-            "The One Everyone Wants",
-            "The One Who Gets Friend-Zoned",
-            "The One There for the Wrong Reasons",
-            "The One Who Cries in Every Confessional",
-            "The One Who Starts Drama for Screen Time",
-        ]
-    },
-    {
-        "scenario": "Neighborhood Watch",
-        "roles": [
-            "The One Who Takes It Way Too Seriously",
-            "The One Who Reports Everything",
-            "The One Who Never Shows Up",
-            "The One Suspected of Being the Problem",
-            "The One Who Just Wanted Snacks",
-        ]
-    },
-    {
-        "scenario": "Karaoke Night",
-        "roles": [
-            "The One Who Sings Every Song",
-            "The One Who Only Sings Sad Songs",
-            "The One Who Refuses to Sing",
-            "The One Who's Actually Good",
-            "The One Who Gets Too Emotional",
-        ]
-    },
-    {
-        "scenario": "Funeral",
-        "roles": [
-            "The One Who Gives the Eulogy",
-            "The One Who Ugly Cries",
-            "The One Who Shows Up Late",
-            "The One Who Makes It Awkward",
-            "The One Reading the Will",
-        ]
-    },
-    {
-        "scenario": "Book Club",
-        "roles": [
-            "The One Who Actually Read It",
-            "The One Who Skimmed the Wikipedia",
-            "The One Who Brings the Wine",
-            "The One Who Hates Every Book",
-            "The One Who Spoils the Ending",
-        ]
-    },
-    {
-        "scenario": "Jury Duty",
-        "roles": [
-            "The One Who Takes Notes",
-            "The One Who's Already Decided",
-            "The One Who Just Wants to Go Home",
-            "The One Asking Too Many Questions",
-            "The One Who Holds Out and Causes a Mistrial",
-        ]
-    },
-    {
-        "scenario": "Talent Show",
-        "roles": [
-            "The One With Actual Talent",
-            "The One Who Thinks They Have Talent",
-            "The One Doing Something Weird",
-            "The Supportive Friend in the Audience",
-            "The One Who Forgets Their Act",
-        ]
-    },
-    {
-        "scenario": "Las Vegas Trip",
-        "roles": [
-            "The One Who Wins Big",
-            "The One Who Loses Everything",
-            "The One Who Gets Married",
-            "The One Who Disappears for 12 Hours",
-            "The One on Damage Control",
-        ]
-    },
-    {
-        "scenario": "Garage Sale",
-        "roles": [
-            "The One Selling Everything",
-            "The One Who Prices Things Too High",
-            "The One Haggling Over $1",
-            "The One Buying Their Own Stuff Back",
-            "The One Who Just Wants Coffee",
-        ]
-    },
-    {
-        "scenario": "Music Festival",
-        "roles": [
-            "The One Who Loses Everyone",
-            "The One Who Knows Every Song",
-            "The One Who Complains the Whole Time",
-            "The One at the First Aid Tent",
-            "The One Who Made It Their Whole Personality",
-        ]
-    },
-    {
-        "scenario": "Family Dinner",
-        "roles": [
-            "The One Who Started the Argument",
-            "The One Trying to Keep the Peace",
-            "The One Eating in Silence",
-            "The One Who Left Early",
-            "The One Who Brought Up Politics",
-        ]
-    },
-    {
-        "scenario": "Airport Delay",
-        "roles": [
-            "The One Who Complains to Staff",
-            "The One Who Made Friends with Strangers",
-            "The One Who's Been Asleep for Hours",
-            "The One Stress-Eating",
-            "The One Rebooking Everyone's Flights",
-        ]
-    },
-    {
-        "scenario": "Intervention",
-        "roles": [
-            "The One Reading the Letter",
-            "The One Who Cries More Than the Subject",
-            "The One Who's Secretly Judging",
-            "The One Who Wasn't Supposed to Be There",
-            "The One Being Intervened",
-        ]
-    },
-    {
-        "scenario": "Trivia Night",
-        "roles": [
-            "The One Who Carries the Team",
-            "The One Confident About Wrong Answers",
-            "The One Who Only Knows Pop Culture",
-            "The One Arguing with the Host",
-            "The One Who Came for the Drinks",
-        ]
-    },
-    {
-        "scenario": "Haunted Airbnb",
-        "roles": [
-            "The One Who Booked It",
-            "The One Who Refuses to Sleep",
-            "The One Documenting Everything",
-            "The One Talking to the Ghost",
-            "The One Who Didn't Notice Anything",
-        ]
-    },
-    {
-        "scenario": "Surprise Party Planning",
-        "roles": [
-            "The Organizer",
-            "The One Who Almost Ruins It",
-            "The One Handling Decorations",
-            "The One Distracting the Guest of Honor",
-            "The One Who Forgot the Date",
-        ]
-    },
-    {
-        "scenario": "Gym Class",
-        "roles": [
-            "The One Taking It Too Seriously",
-            "The One Faking an Injury",
-            "The One Picked Last",
-            "The Coach's Favorite",
-            "The One Who Forgot Their Clothes",
-        ]
-    },
-    {
-        "scenario": "Caper Gone Wrong",
-        "roles": [
-            "The One Who Planned Everything",
-            "The One Who Forgot the Plan",
-            "The One Who Got Caught",
-            "The One Who Escaped",
-            "The One Who Caused It to Go Wrong",
-        ]
-    },
-    {
-        "scenario": "Movie Night",
-        "roles": [
-            "The One Who Picks the Movie",
-            "The One Who Falls Asleep",
-            "The One Commenting the Whole Time",
-            "The One on Their Phone",
-            "The One Eating All the Snacks",
-        ]
-    },
-    {
-        "scenario": "Black Friday Shopping",
-        "roles": [
-            "The One With a Strategy",
-            "The One Who Gets Trampled",
-            "The One Fighting Over the Last Item",
-            "The One Waiting in the Car",
-            "The One Who Bought Nothing",
-        ]
-    },
-    {
-        "scenario": "Beach Day",
-        "roles": [
-            "The One Who Gets Sunburned",
-            "The One Building a Sand Castle",
-            "The One Who Won't Go in the Water",
-            "The One Who Loses Their Phone in the Sand",
-            "The One Asleep Under the Umbrella",
-        ]
-    },
-    {
-        "scenario": "Ski Trip",
-        "roles": [
-            "The One Who's Actually Good",
-            "The One on the Bunny Slope All Day",
-            "The One Who Gets Hurt First",
-            "The One at the Lodge the Whole Time",
-            "The One Who Lost a Ski",
-        ]
-    },
-    {
-        "scenario": "Improv Class",
-        "roles": [
-            "The Natural",
-            "The One Who Freezes",
-            "The One Who Says 'No' to Everything",
-            "The One Making It Weird",
-            "The One Who Thinks They're Funnier Than They Are",
-        ]
-    },
-    {
-        "scenario": "Power Outage",
-        "roles": [
-            "The One Who Has Flashlights Ready",
-            "The One Panicking",
-            "The One Telling Ghost Stories",
-            "The One Whose Phone Died",
-            "The One Who Goes to Sleep",
-        ]
-    },
-    {
-        "scenario": "Job Interview Day",
-        "roles": [
-            "The One Who Nailed It",
-            "The One Who Bombed It",
-            "The One Who Was Overdressed",
-            "The One Who Got Lost Finding the Office",
-            "The One Who Got the Interviewer's Name Wrong",
-        ]
-    },
-    {
-        "scenario": "Wine Tasting",
-        "roles": [
-            "The Sommelier Wannabe",
-            "The One Who's Just Here to Drink",
-            "The Designated Driver",
-            "The One Taking It Too Seriously",
-            "The One Who's Already Drunk",
-        ]
-    },
-    {
-        "scenario": "Marathon",
-        "roles": [
-            "The One Who Trained for Months",
-            "The One Who Signed Up as a Joke",
-            "The One Giving Up at Mile 3",
-            "The One Getting Carried Across the Finish Line",
-            "The One Handing Out Water",
-        ]
-    },
-    {
-        "scenario": "Parent-Teacher Conference",
-        "roles": [
-            "The Strict Parent",
-            "The Chill Parent",
-            "The Parent Who Blames the Teacher",
-            "The Parent Making Excuses",
-            "The Teacher Who's Over It",
-        ]
-    },
-    {
-        "scenario": "Fire Drill",
-        "roles": [
-            "The One Who Takes Charge",
-            "The One Who Panics",
-            "The One Who Thinks It's Real",
-            "The One Who Stayed Behind",
-            "The One Timing How Long It Takes",
-        ]
-    },
-    {
-        "scenario": "Alien First Contact",
-        "roles": [
-            "The Diplomat",
-            "The One Who Runs",
-            "The One Trying to Take a Selfie",
-            "The One Who Already Knew",
-            "The One Offering Them Food",
-        ]
-    },
-    {
-        "scenario": "Apartment Hunt",
-        "roles": [
-            "The One With Unrealistic Standards",
-            "The One Who'll Take Anything",
-            "The One Asking About Vibes",
-            "The One Reading Every Lease Detail",
-            "The One Who Found Mold",
-        ]
-    },
-    {
-        "scenario": "DIY Project",
-        "roles": [
-            "The One Who Read the Instructions",
-            "The One Who Didn't Read the Instructions",
-            "The One Holding the Flashlight",
-            "The One Who Went to Get Food",
-            "The One Who Made It Worse",
-        ]
-    },
-    {
-        "scenario": "Speed Dating",
-        "roles": [
-            "The One Who Actually Tried",
-            "The One Who Ran Out of Topics",
-            "The One Who's Too Intense",
-            "The One Who Left Early",
-            "The One Getting All the Numbers",
-        ]
-    },
-    {
-        "scenario": "Protest March",
-        "roles": [
-            "The One Leading Chants",
-            "The One Holding the Sign",
-            "The One Who Got Lost in the Crowd",
-            "The One Live-Streaming Everything",
-            "The One Passing Out Snacks",
-        ]
-    },
-    {
-        "scenario": "Sinking Ship",
-        "roles": [
-            "The One Organizing Lifeboats",
-            "The One Who Panics",
-            "The One Playing Music to the End",
-            "The One Going Back for Their Stuff",
-            "The One With a Secret Life Vest",
-        ]
-    },
-    {
-        "scenario": "Midnight Diner",
-        "roles": [
-            "The Regular Who Knows Everyone",
-            "The One Eating Their Feelings",
-            "The One Who Just Got Off Work",
-            "The One Who's Oversharing to the Waitstaff",
-            "The One Who Came for Coffee Only",
-        ]
-    },
-    {
-        "scenario": "Dog Park",
-        "roles": [
-            "The One Whose Dog Behaves",
-            "The One Apologizing Constantly",
-            "The One Without a Dog (Just Watching)",
-            "The One Giving Training Advice",
-            "The One Whose Dog Started Drama",
-        ]
-    },
-    {
-        "scenario": "Gym Locker Room",
-        "roles": [
-            "The One Who Takes Forever",
-            "The One Walking Around Naked",
-            "The One in and Out in 2 Minutes",
-            "The One Having Full Conversations",
-            "The One Who Forgot Their Lock",
-        ]
-    },
-    {
-        "scenario": "Retirement Home Visit",
-        "roles": [
-            "The One Who Connects Deeply",
-            "The One Checking Their Phone",
-            "The One Who Brought Cookies",
-            "The One Asking Uncomfortable Questions",
-            "The One Who Cried on the Way Home",
-        ]
-    },
-    {
-        "scenario": "Baby Shower",
-        "roles": [
-            "The Planner",
-            "The One Who Drank Too Much Punch",
-            "The One Giving Unsolicited Advice",
-            "The One Who Doesn't Want Kids",
-            "The One Who Got the Best Gift",
-        ]
-    },
-    {
-        "scenario": "Snowstorm",
-        "roles": [
-            "The One Who Stocked Up on Supplies",
-            "The One Who Has to Go Outside",
-            "The One Who Loses Power",
-            "The One Who's Vibing by the Fire",
-            "The One Who's Complaining the Whole Time",
-        ]
-    },
-    {
-        "scenario": "Food Truck Rally",
-        "roles": [
-            "The One Who Tries Everything",
-            "The One Who Can't Decide",
-            "The One With Food Allergies",
-            "The One Saving Tables",
-            "The One Documenting It All for Instagram",
-        ]
-    },
-    {
-        "scenario": "Escape the Simulation",
-        "roles": [
-            "The One Who Figured It Out",
-            "The One Who Refuses to Believe",
-            "The One Who Wants to Stay",
-            "The One Exploiting the Glitches",
-            "The NPC Who Became Self-Aware",
-        ]
-    },
-    {
-        "scenario": "Influencer Meetup",
-        "roles": [
-            "The One With the Most Followers",
-            "The One Trying Too Hard",
-            "The One There for Free Stuff",
-            "The One Having a Mental Breakdown",
-            "The One Networking Aggressively",
-        ]
-    },
-    {
-        "scenario": "Divorce Proceedings",
-        "roles": [
-            "The One Who Saw It Coming",
-            "The One Who Didn't See It Coming",
-            "The Messy Lawyer",
-            "The One Fighting Over the Dog",
-            "The One Writing Everything Down",
-        ]
-    },
-    {
-        "scenario": "Haunted Ship",
-        "roles": [
-            "The Captain Going Down with It",
-            "The One Who Saw the Ghost First",
-            "The One Who Thinks It's Maritime Law Issues",
-            "The One in the Crow's Nest",
-            "The One Who Angered the Spirit",
-        ]
-    },
-    {
-        "scenario": "Discord Server Mod Team",
-        "roles": [
-            "The Power Moderator",
-            "The One Who Never Checks Their Pings",
-            "The One Who Bans Too Fast",
-            "The One Writing Rules Nobody Reads",
-            "The One Who Drama-Stirred and Got Promoted",
-        ]
-    },
-    {
-        "scenario": "Garage Band Practice",
-        "roles": [
-            "The One Who Owns the Space",
-            "The One Who's Actually Talented",
-            "The One Always Late",
-            "The One Suggesting Covers",
-            "The One Who Quit Last Week But Showed Up",
-        ]
-    },
-    {
-        "scenario": "Family Photo",
-        "roles": [
-            "The One Who Orchestrates Everything",
-            "The One Not Looking at the Camera",
-            "The One With Fake Smiling",
-            "The One Who Blinked Every Time",
-            "The One Who Left Too Early",
-        ]
-    },
-    {
-        "scenario": "Neighborhood Potluck",
-        "roles": [
-            "The One Who Brought Store-Bought",
-            "The One Who Made Way Too Much",
-            "The One Taking All the Credit",
-            "The One Guarding Their Recipe",
-            "The One Who Ate Before Coming",
-        ]
-    },
-    {
-        "scenario": "New Year's Eve",
-        "roles": [
-            "The One Counting Down Too Early",
-            "The One Asleep by 11",
-            "The One Who Kisses Everyone",
-            "The One Who's Too Emotional",
-            "The One Planning Next Year's Resolutions Already",
-        ]
-    },
-    {
-        "scenario": "First Day at New Job",
-        "roles": [
-            "The One Over-Preparing",
-            "The One Who's Already Buddy-Buddy with Everyone",
-            "The One Lost in the Building",
-            "The One Forgotten by HR",
-            "The One Asking Too Fast When's Lunch",
-        ]
-    },
-    {
-        "scenario": "Amusement Park",
-        "roles": [
-            "The One Who Rides Everything",
-            "The One Holding Everyone's Stuff",
-            "The One Who Got Sick",
-            "The One Winning at Games",
-            "The One Who Just Wants Funnel Cake",
-        ]
-    },
-    {
-        "scenario": "Art Museum",
-        "roles": [
-            "The One Pretending to Understand",
-            "The One Taking Photos of Everything",
-            "The One Sitting on Every Bench",
-            "The One at the Gift Shop",
-            "The One Who Actually Gets It",
-        ]
-    },
-    {
-        "scenario": "Condo Board Meeting",
-        "roles": [
-            "The One With Petty Complaints",
-            "The Reasonable One Nobody Listens To",
-            "The One Recording Everything",
-            "The One Causing All the Problems",
-            "The One Who Wants to Talk About Parking Again",
-        ]
-    },
-    {
-        "scenario": "Cross-Country Move",
-        "roles": [
-            "The One Driving the Truck",
-            "The One Who Packed Nothing",
-            "The One Managing Logistics",
-            "The One Crying Over Leaving",
-            "The One Already Scouting Restaurants in the New City",
-        ]
-    },
-    {
-        "scenario": "Comic-Con",
-        "roles": [
-            "The One in Full Cosplay",
-            "The One Waiting in Every Line",
-            "The One Who Got the Autograph",
-            "The One Who Spent Too Much",
-            "The One Who Got Recognized",
-        ]
-    },
-    {
-        "scenario": "Spelunking Expedition",
-        "roles": [
-            "The Guide",
-            "The One Getting Stuck",
-            "The One With Claustrophobia",
-            "The One Taking Samples",
-            "The One Whose Light Went Out",
-        ]
-    },
-    {
-        "scenario": "International Layover",
-        "roles": [
-            "The One Who Found the Lounge",
-            "The One Exploring the Airport",
-            "The One Who Missed the Connection",
-            "The One Sleeping Anywhere",
-            "The One Buying Duty-Free",
-        ]
-    },
-    {
-        "scenario": "Building IKEA Furniture",
-        "roles": [
-            "The One Reading Directions",
-            "The One Ignoring Directions",
-            "The One Holding the Parts",
-            "The One Who's Done Already",
-            "The One Missing a Screw at the End",
-        ]
-    },
-    {
-        "scenario": "Podcast Recording",
-        "roles": [
-            "The Host",
-            "The One Who Talks Too Close to the Mic",
-            "The One Who Goes Off Script",
-            "The One Editing Out the Mistakes",
-            "The One With Strong Opinions",
-        ]
-    },
-    {
-        "scenario": "Alien Abduction",
-        "roles": [
-            "The One Asking Questions",
-            "The One Panicking",
-            "The One Making Friends with the Aliens",
-            "The One Trying to Fight",
-            "The One Who's Been Here Before",
-        ]
-    },
-    {
-        "scenario": "Late-Night Study Session",
-        "roles": [
-            "The One Who's Actually Studying",
-            "The One Procrastinating",
-            "The One Bringing Snacks",
-            "The One Already Asleep",
-            "The One Having a Breakdown",
-        ]
-    },
-    {
-        "scenario": "Thrift Store",
-        "roles": [
-            "The One Finding Designer Pieces",
-            "The One Judging Everything",
-            "The One Buying Too Much",
-            "The One in the Dressing Room Forever",
-            "The One Who Found Something Cursed",
-        ]
-    },
-    {
-        "scenario": "House Party Cleanup",
-        "roles": [
-            "The One Who Stayed to Help",
-            "The One Who Disappeared",
-            "The One Eating Leftovers",
-            "The One Finding Weird Things",
-            "The One Complaining the Whole Time",
-        ]
-    },
-    {
-        "scenario": "Escape Room (High Stakes)",
-        "roles": [
-            "The One Taking Control",
-            "The One Panicking About Time",
-            "The One Solving Everything Quietly",
-            "The One Touching Random Things",
-            "The One Who Gave Up Early",
-        ]
-    },
-    {
-        "scenario": "Pet Store Visit",
-        "roles": [
-            "The One Who Wants Everything",
-            "The Voice of Reason",
-            "The One Talking to the Animals",
-            "The One Who Almost Bought a Snake",
-            "The One Taking Photos for Instagram",
-        ]
-    },
+TYPOLOGY_WHO_QUESTIONS = [
+    # Social Situations
+    "Who is most likely to leave the group chat on read for 3 days then respond like nothing happened?",
+    "Who is most likely to make plans but secretly hope they cancel?",
+    "Who is most likely to rewrite a text 5 times before sending?",
+    "Who is most likely to panic-buy snacks when sad?",
+    "Who is most likely to have 47 tabs open and know exactly what each one is for?",
+    "Who is most likely to triple-check they locked the door?",
+    "Who is most likely to say 'I'll think about it' when they already decided no?",
+    "Who is most likely to still be mad about something from 3 years ago but never bring it up?",
+    "Who is most likely to zone out mid-conversation then pretend they were listening?",
+    "Who is most likely to overshare to strangers but never talk to friends about problems?",
+    "Who is most likely to rehearse arguments in the shower?",
+    "Who is most likely to say 'no worries' when there are, in fact, worries?",
+    "Who is most likely to take 2 hours to reply but expect instant responses?",
+    "Who is most likely to have a mental breakdown but make jokes about it?",
+    "Who is most likely to send voice messages that are basically podcasts?",
+    "Who is most likely to need alone time but get FOMO when everyone hangs out without them?",
+    "Who is most likely to give amazing advice but ignore their own problems?",
+    "Who is most likely to apologize too much?",
+    "Who is most likely to be friendly to everyone but not consider anyone a close friend?",
+    "Who is most likely to start projects at 2am?",
+    "Who is most likely to hate small talk but talk for hours about niche interests?",
+    "Who is most likely to overexplain everything?",
+    "Who is most likely to have 200 unread emails and feel fine about it?",
+    "Who is most likely to fact-check people mid-conversation?",
+    "Who is most likely to remember every detail of every conversation?",
+    "Who is most likely to say 'I'm not mad' in a tone that clearly means they're mad?",
+    "Who is most likely to cancel plans last minute with a vague excuse?",
+    "Who is most likely to hold the door open for someone too far away and create that awkward jog?",
+    "Who is most likely to laugh at jokes they don't understand?",
+    "Who is most likely to pretend to be on their phone to avoid talking to people?",
+    
+    # Decision Making
+    "Who is most likely to overthink a menu for 10 minutes then order the same thing?",
+    "Who is most likely to make a pro/con list for minor decisions?",
+    "Who is most likely to decide based on vibes alone?",
+    "Who is most likely to ask for advice then do the opposite?",
+    "Who is most likely to commit to plans only if there's an escape route?",
+    "Who is most likely to change their whole career path because of one comment?",
+    "Who is most likely to Google symptoms and convince themselves they're dying?",
+    "Who is most likely to need background music to make decisions?",
+    "Who is most likely to pick the worst time to bring up serious topics?",
+    "Who is most likely to double-text when anxious?",
+    
+    # Work/Study
+    "Who is most likely to write a 5-paragraph response to a 1-line message?",
+    "Who is most likely to do their best work under unreasonable time pressure?",
+    "Who is most likely to procrastinate by doing other productive things?",
+    "Who is most likely to organize everything except their actual responsibilities?",
+    "Who is most likely to say 'per my last email' and mean it aggressively?",
+    "Who is most likely to stay late not because they're working but because going home feels weird?",
+    "Who is most likely to mentally check out of meetings but look engaged?",
+    "Who is most likely to volunteer for tasks then immediately regret it?",
+    "Who is most likely to silently judge everyone's workflow?",
+    "Who is most likely to turn a 5-minute task into a 2-hour research project?",
+    
+    # Relationships
+    "Who is most likely to catch feelings too fast?",
+    "Who is most likely to act unbothered but actually be bothered?",
+    "Who is most likely to ghost people instead of having hard conversations?",
+    "Who is most likely to fall for people based entirely on potential?",
+    "Who is most likely to stay friends with exes?",
+    "Who is most likely to say 'I'm fine' and then write a diary entry about it?",
+    "Who is most likely to get too attached to fictional characters?",
+    "Who is most likely to overanalyze every interaction?",
+    "Who is most likely to have a crush and tell literally everyone except the person?",
+    "Who is most likely to need 3 business days to process emotions?",
+    
+    # Daily Life
+    "Who is most likely to eat the same meal for a week straight?",
+    "Who is most likely to keep clothes in the 'floordrobe'?",
+    "Who is most likely to set 12 alarms and snooze all of them?",
+    "Who is most likely to have a skincare routine but no sleep schedule?",
+    "Who is most likely to buy stuff 'for later' and never use it?",
+    "Who is most likely to clean when stressed?",
+    "Who is most likely to reorganize their room at 3am?",
+    "Who is most likely to have perfect playlists but a chaotic life?",
+    "Who is most likely to know the lore of random things nobody asked about?",
+    "Who is most likely to say 'be there in 5' while still in bed?",
+    
+    # Online Behavior
+    "Who is most likely to lurk in group chats but never message?",
+    "Who is most likely to type '...' then never send anything?",
+    "Who is most likely to delete messages after sending?",
+    "Who is most likely to screenshot conversations to analyze with friends?",
+    "Who is most likely to have finsta energy?",
+    "Who is most likely to read the whole Wikipedia article when they look something up?",
+    "Who is most likely to have a burner account?",
+    "Who is most likely to unfollow people quietly?",
+    "Who is most likely to take social media breaks dramatically but come back in 2 days?",
+    "Who is most likely to curate their online presence carefully but act unhinged in person?",
+    
+    # Conflict
+    "Who is most likely to avoid confrontation then explode randomly?",
+    "Who is most likely to pick fights for fun?",
+    "Who is most likely to walk away mid-argument?",
+    "Who is most likely to remember exactly what you said 6 months ago and bring it up now?",
+    "Who is most likely to say 'whatever you want' but definitely have an opinion?",
+    "Who is most likely to write apology texts that are basically essays?",
+    "Who is most likely to hold grudges silently?",
+    "Who is most likely to cry when angry?",
+    "Who is most likely to hate-watch things?",
+    "Who is most likely to bring up old receipts in arguments?",
+    
+    # More situations
+    "Who is most likely to have a full conversation with their pet?",
+    "Who is most likely to save 'important' articles they'll never read?",
+    "Who is most likely to practice conversations before making phone calls?",
+    "Who is most likely to write a passive-aggressive email then delete it?",
+    "Who is most likely to stay up until 4am researching something random?",
+    "Who is most likely to forget someone's name immediately after meeting them?",
+    "Who is most likely to have a notes app full of unfinished thoughts?",
+    "Who is most likely to have strong opinions about proper folder organization?",
+    "Who is most likely to say 'let me know when you get home' and actually mean it?",
+    "Who is most likely to silently leave a party without saying goodbye?",
+    "Who is most likely to have a go-to comfort show they've watched 10+ times?",
+    "Who is most likely to say 'I was just about to text you' when they weren't?",
+    "Who is most likely to accidentally send a screenshot to the person they were screenshotting?",
+    "Who is most likely to have main character syndrome?",
+    "Who is most likely to write emotional texts while listening to sad music?",
+    "Who is most likely to pretend they haven't seen someone to avoid small talk?",
+    "Who is most likely to remember random facts about people they barely know?",
+    "Who is most likely to have a crisis about what font to use?",
+    "Who is most likely to make eye contact with strangers and immediately look away?",
+    "Who is most likely to delete social media then redownload it the same day?",
+    "Who is most likely to say 'I hate drama' but always know all the tea?",
+    "Who is most likely to have notifications off but still respond instantly?",
+    "Who is most likely to make playlists for situations that will never happen?",
+    "Who is most likely to overthink a thumbs up emoji?",
+    "Who is most likely to have a detailed backup plan for their backup plan?",
+    "Who is most likely to remember compliments from 5 years ago?",
+    "Who is most likely to be the last one to leave a hangout?",
+    "Who is most likely to fall asleep thinking about things they said in 2013?",
+    "Who is most likely to have trust issues with autocorrect?",
+    "Who is most likely to buy something expensive and hide it from themselves?",
+    
+    # Even more situations
+    "Who is most likely to create a fake scenario in their head and get mad about it?",
+    "Who is most likely to have a secret Pinterest board for a life they'll never live?",
+    "Who is most likely to say 'I'll sleep early tonight' and mean it?",
+    "Who is most likely to have a niche hobby that nobody else understands?",
+    "Who is most likely to forget they were in the middle of a task?",
+    "Who is most likely to hear a song once and know all the lyrics?",
+    "Who is most likely to blame their behavior on their star sign or type?",
+    "Who is most likely to have a favorite spot on the couch and get upset if someone takes it?",
+    "Who is most likely to have strong opinions about water?",
+    "Who is most likely to have a 'one day' list that never gets touched?",
+    "Who is most likely to befriend a stray animal?",
+    "Who is most likely to queue skip and justify it?",
+    "Who is most likely to have 15 drafts saved that they'll never post?",
+    "Who is most likely to be the group's accidental therapist?",
+    "Who is most likely to have a 'signature' item they wear constantly?",
+    "Who is most likely to get irrationally attached to a side character?",
+    "Who is most likely to act like they don't need anyone but secretly want company?",
+    "Who is most likely to mute themselves and then forget to unmute?",
+    "Who is most likely to send a 🙂 and mean it passive-aggressively?",
+    "Who is most likely to have too many projects going at once?",
+    "Who is most likely to have a very specific bedtime ritual?",
+    "Who is most likely to overthink whether 'lol' or 'haha' is more appropriate?",
+    "Who is most likely to read into punctuation?",
+    "Who is most likely to be the friend who remembers everyone's allergies?",
+    "Who is most likely to have a grudge journal?",
+    "Who is most likely to buy a planner and never use it?",
+    "Who is most likely to have a breakup playlist ready at all times?",
+    "Who is most likely to accidentally trauma dump on someone they just met?",
+    "Who is most likely to turn everything into a competition?",
+    "Who is most likely to have a whole personality shift based on the music they're listening to?",
 ]
 
 # ==================== SPARK WOULD YOU RATHER (WYR) ====================

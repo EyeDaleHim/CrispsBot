@@ -756,7 +756,7 @@ async def post_typology(guild_id: str, ping: bool = True, channel: discord.TextC
         print(f"[Typology] Could not find channel")
         return
 
-    categories = ["matchups", "hottakes", "scenarios"]
+    categories = ["matchups", "hottakes", "who"]
     
     # Use text-based tracking for category rotation
     used_types = await db.get_used_questions(guild_id, "typology_type")
@@ -793,19 +793,10 @@ async def post_typology(guild_id: str, ping: bool = True, channel: discord.TextC
         footer_text = "Hot Take"
         reactions_to_add = ["👍", "👎"]
     else:
-        # Pick unused scenario using scenario text as key
-        scenarios = config.SCENARIO_ROLE_ASSIGNMENTS
-        used_scenarios = await db.get_used_questions(guild_id, "typology_scenarios")
-        available_scenarios = [s for s in scenarios if s["scenario"] not in used_scenarios]
-        if not available_scenarios:
-            await db.reset_questions(guild_id, "typology_scenarios")
-            available_scenarios = scenarios
-        scenario = random.choice(available_scenarios)
-        await db.mark_question_used(guild_id, "typology_scenarios", scenario["scenario"])
-        
-        roles_list = "\n".join([f"• {role}" for role in scenario["roles"]])
-        description = f"🎬 **{scenario['scenario']}**\n\nAssign roles to the group:\n{roles_list}"
-        footer_text = "Scenario Roles"
+        # Pick unused "who" question
+        question = await get_unused_question(guild_id, "typology_who", config.TYPOLOGY_WHO_QUESTIONS)
+        description = question
+        footer_text = "Most Likely To"
     
     count_str = await db.get_state(guild_id, "typology_question_count") or "0"
     count = int(count_str) + 1
@@ -1418,7 +1409,7 @@ async def auto_start_word_game(gid: str) -> bool:
 
 # ---------- Public ----------
 
-BOT_VERSION = "v1.72.3"
+BOT_VERSION = "v1.73.0"
 
 
 @bot.tree.command(name="version", description="Check bot version (debug)")
