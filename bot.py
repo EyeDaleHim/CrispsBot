@@ -35,26 +35,22 @@ intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 QUESTION_SCHEDULES = {
-    "chill": {"hour": 12, "minute": 0},
-    "warm": {"hour": 20, "minute": 0},
+    "casual": {"hour": 20, "minute": 0},
     "typology": {"hour": 0, "minute": 0},
 }
 
 
 HARDCODED = {
-    "ping_role_warm": "1470111504954032300",
-    "ping_role_chill": "1470111189869527131",
+    "ping_role_casual": "1470111189869527131",  # Casual questions ping role (was chill)
     "ping_role_typology": "1470111535559999590",
-    "channel_warm": "1470111942696767548",
-    "channel_chill": "1470111942696767548",
+    "channel_casual": "1470111942696767548",
     "channel_typology": "1450418107368738848",
     "channel_codepurple": "1446277377771573402",
     "channel_activity_rewards": "1446277377771573402",
     "channel_chatter_rewards": "1470204258992390164",
     "channel_hall_of_fame": "1479638228834189457",
     "backup_message_id": "1479654378842357810",
-    "role_picker_message_warm": "1470113538994606160",
-    "role_picker_message_chill": "1470113556476334182",
+    "role_picker_message_casual": "1470113556476334182",  # Role picker for casual (was chill)
     "role_picker_message_typology": "1470113576017723564",
     "blacklist_categories": ["1446269291123966044", "1446277444372791458"],
     "blacklist_channels": [],
@@ -650,101 +646,60 @@ def build_typology_embed(target: discord.Member, profile: dict | None, attach_mb
 # ======================== POSTING FUNCTIONS ========================
 
 
-async def post_warm(guild_id: str, ping: bool = True, channel: discord.TextChannel = None):
-    """Post a warm question (WYR, Debates, or Button) using type+question bags."""
+async def post_casual(guild_id: str, ping: bool = True, channel: discord.TextChannel = None, exclude_polls: bool = False):
+    """Post a casual question (Fun Questions, Polls, WYR, Debates, or Button) using type+question bags."""
     if not channel:
-        channel_id = HARDCODED["channel_warm"]
+        channel_id = HARDCODED["channel_casual"]
         channel = bot.get_channel(int(channel_id))
     if not channel:
-        print(f"[Warm] Could not find channel")
+        print(f"[Casual] Could not find channel")
         return
 
-    categories = ["wyr", "debate", "button"]
+    categories = ["fun", "poll"]
+    if exclude_polls:
+        categories = [c for c in categories if c != "poll"]
     category_map = {
-        "wyr": (config.SPARK_WYR, "warm_wyr", "Would You Rather"),
-        "debate": (config.SPARK_DEBATES, "warm_debate", "Debate Time"),
-        "button": (config.BUTTON_QUESTIONS, "warm_button", "Press The Button"),
+        "fun": (config.CASUAL_QUESTIONS, "casual_fun", "Question"),
+        "poll": (config.CASUAL_POLLS, "casual_poll", "Poll"),
     }
     
     # Use text-based tracking for category rotation
-    used_types = await db.get_used_questions(guild_id, "warm_type")
+    used_types = await db.get_used_questions(guild_id, "casual_type")
     if len(used_types) >= len(categories):
-        await db.reset_questions(guild_id, "warm_type")
+        await db.reset_questions(guild_id, "casual_type")
         used_types = []
     available_types = [cat for cat in categories if cat not in used_types]
     selected_cat = random.choice(available_types)
-    await db.mark_question_used(guild_id, "warm_type", selected_cat)
+    await db.mark_question_used(guild_id, "casual_type", selected_cat)
     
     questions, qtype_key, display_name = category_map[selected_cat]
     
     question = await get_unused_question(guild_id, qtype_key, questions)
 
-    count_str = await db.get_state(guild_id, "warm_question_count") or "0"
+    count_str = await db.get_state(guild_id, "casual_question_count") or "0"
     count = int(count_str) + 1
-    await db.set_state(guild_id, "warm_question_count", str(count))
+    await db.set_state(guild_id, "casual_question_count", str(count))
 
     embed = _embed(
-        config.EMBEDS["warm"]["title"],
+        config.EMBEDS["casual"]["title"],
         question,
-        "warm",
+        "casual",
         footer=f"{display_name} (#{count})",
     )
 
-    view = NewQuestionView("warm")
+    view = NewQuestionView("casual")
+    
     if ping:
-        ping_role_id = HARDCODED["ping_role_warm"]
+        ping_role_id = HARDCODED["ping_role_casual"]
         content = f"<@&{ping_role_id}>"
-        await channel.send(content=content, embed=embed, view=view, allowed_mentions=discord.AllowedMentions(roles=True))
+        msg = await channel.send(content=content, embed=embed, view=view, allowed_mentions=discord.AllowedMentions(roles=True))
     else:
-        await channel.send(embed=embed, view=view)
-
-
-async def post_chill(guild_id: str, ping: bool = True, channel: discord.TextChannel = None):
-    """Post a chill question (Chill or Lifestyle) using type+question bags."""
-    if not channel:
-        channel_id = HARDCODED["channel_chill"]
-        channel = bot.get_channel(int(channel_id))
-    if not channel:
-        print(f"[Chill] Could not find channel")
-        return
-
-    categories = ["chill", "lifestyle"]
-    category_map = {
-        "chill": (config.SPARK_CHILL, "chill_chill", "Chill Vibes"),
-        "lifestyle": (config.PERSONALITY_QUESTIONS, "chill_lifestyle", "Lifestyle"),
-    }
+        msg = await channel.send(embed=embed, view=view)
     
-    # Use text-based tracking for category rotation
-    used_types = await db.get_used_questions(guild_id, "chill_type")
-    if len(used_types) >= len(categories):
-        await db.reset_questions(guild_id, "chill_type")
-        used_types = []
-    available_types = [cat for cat in categories if cat not in used_types]
-    selected_cat = random.choice(available_types)
-    await db.mark_question_used(guild_id, "chill_type", selected_cat)
-    
-    questions, qtype_key, display_name = category_map[selected_cat]
-    
-    question = await get_unused_question(guild_id, qtype_key, questions)
-
-    count_str = await db.get_state(guild_id, "chill_question_count") or "0"
-    count = int(count_str) + 1
-    await db.set_state(guild_id, "chill_question_count", str(count))
-
-    embed = _embed(
-        config.EMBEDS["chill"]["title"],
-        question,
-        "chill",
-        footer=f"{display_name} (#{count})",
-    )
-
-    view = NewQuestionView("chill")
-    if ping:
-        ping_role_id = HARDCODED["ping_role_chill"]
-        content = f"<@&{ping_role_id}>"
-        await channel.send(content=content, embed=embed, view=view, allowed_mentions=discord.AllowedMentions(roles=True))
-    else:
-        await channel.send(embed=embed, view=view)
+    # For polls, add yes/no reactions
+    if selected_cat == "poll":
+        await msg.add_reaction("✅")
+        await msg.add_reaction("❌")
 
 
 async def post_typology(guild_id: str, ping: bool = True, channel: discord.TextChannel = None):
@@ -827,8 +782,7 @@ async def post_typology(guild_id: str, ping: bool = True, channel: discord.TextC
 
 # Map question type → post function
 QUESTION_POST_FNS = {
-    "warm": post_warm,
-    "chill": post_chill,
+    "casual": post_casual,
     "typology": post_typology,
 }
 
@@ -1341,10 +1295,8 @@ class NewQuestionView(discord.ui.View):
         # Show who requested the new question
         await interaction.channel.send(f"-# {interaction.user.display_name} requested a new question")
         
-        if qtype == "warm":
-            await post_warm(gid, ping=False, channel=interaction.channel)
-        elif qtype == "chill":
-            await post_chill(gid, ping=False, channel=interaction.channel)
+        if qtype == "casual":
+            await post_casual(gid, ping=False, channel=interaction.channel, exclude_polls=True)
         elif qtype == "typology":
             await post_typology(gid, ping=False, channel=interaction.channel)
 
@@ -1409,7 +1361,7 @@ async def auto_start_word_game(gid: str) -> bool:
 
 # ---------- Public ----------
 
-BOT_VERSION = "v1.73.0"
+BOT_VERSION = "v1.74.0"
 
 
 @bot.tree.command(name="version", description="Check bot version (debug)")
@@ -1690,10 +1642,9 @@ async def viewschedule_cmd(interaction: discord.Interaction):
 
     # --- Channel Status ---
     lines.append("**📌 Channel Setup**")
-    channel_types = ["warm", "chill", "typology", "codepurple", "activity_rewards"]
+    channel_types = ["casual", "typology", "codepurple", "activity_rewards"]
     channel_names = {
-        "warm": "🔥 Warm Questions",
-        "chill": "🌙 Chill Questions", 
+        "casual": "💬 Casual Questions",
         "typology": "✨ Typology Questions",
         "codepurple": "💜 Code Purple",
         "activity_rewards": "🏆 Activity Rewards",
@@ -1711,9 +1662,9 @@ async def viewschedule_cmd(interaction: discord.Interaction):
 
     # --- Ping Roles Status ---
     lines.append("**🔔 Ping Roles**")
-    for qtype in ["warm", "chill", "typology"]:
+    for qtype in ["casual", "typology"]:
         role_id = HARDCODED.get(f"ping_role_{qtype}")
-        qname = {"warm": "🔥 Warm", "chill": "🌙 Chill", "typology": "✨ Typology"}[qtype]
+        qname = {"casual": "💬 Casual", "typology": "✨ Typology"}[qtype]
         if role_id:
             lines.append(f"✅ {qname}: <@&{role_id}>")
         else:
@@ -1726,17 +1677,15 @@ async def viewschedule_cmd(interaction: discord.Interaction):
     
     # Show fixed question times
     names = {
-        "chill": "🌙 Chill Question",
-        "warm": "🔥 Warm Question",
+        "casual": "💬 Casual Question",
         "typology": "✨ Typology Question",
     }
     times = {
-        "chill": "12:00 PM",
-        "warm": "8:00 PM",
+        "casual": "8:00 PM",
         "typology": "12:00 AM",
     }
     # Order by time of day for nice display
-    for qtype in ["chill", "warm", "typology"]:
+    for qtype in ["casual", "typology"]:
         sched = QUESTION_SCHEDULES[qtype]
         ch_id = HARDCODED.get(f"channel_{qtype}")
         status = f"→ <#{ch_id}>" if ch_id else "→ ⚠️ No channel"
@@ -1775,8 +1724,7 @@ async def viewschedule_cmd(interaction: discord.Interaction):
 @app_commands.describe(feature="What to post")
 @app_commands.choices(
     feature=[
-        app_commands.Choice(name="🌙 Chill Question", value="chill"),
-        app_commands.Choice(name="🔥 Warm Question", value="warm"),
+        app_commands.Choice(name="💬 Casual Question", value="casual"),
         app_commands.Choice(name="✨ Typology Question", value="typology"),
         app_commands.Choice(name="🥔 Chip Drop", value="chipdrop"),
     ]
@@ -1803,8 +1751,7 @@ async def forcepost_cmd(interaction: discord.Interaction, feature: app_commands.
 # ---------- Ping Role ----------
 
 QUESTION_FEATURE_NAMES = {
-    "warm": "🔥 Warm Questions",
-    "chill": "🌙 Chill Questions",
+    "casual": "💬 Casual Questions",
     "typology": "✨ Typology Questions",
 }
 
@@ -1818,8 +1765,7 @@ async def on_ready():
         await db.init()
         bot.add_view(WordGameActiveView())
         bot.add_view(WordGameStartView())
-        bot.add_view(NewQuestionView("warm"))
-        bot.add_view(NewQuestionView("chill"))
+        bot.add_view(NewQuestionView("casual"))
         bot.add_view(NewQuestionView("typology"))
         schedule_loop.start()
         bot.loop.create_task(chip_drop_cycle())
@@ -1895,15 +1841,17 @@ async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
     # Check all feature pickers using hardcoded message IDs
     matched_feature = None
     msg_id = str(payload.message_id)
-    for feature in ["warm", "chill", "typology"]:
-        if msg_id == HARDCODED[f"role_picker_message_{feature}"]:
+    for feature in ["casual", "typology"]:
+        if msg_id == HARDCODED.get(f"role_picker_message_{feature}"):
             matched_feature = feature
             break
     
     if not matched_feature:
         return
 
-    role_id = HARDCODED[f"ping_role_{matched_feature}"]
+    role_id = HARDCODED.get(f"ping_role_{matched_feature}")
+    if not role_id:
+        return
 
     guild = bot.get_guild(payload.guild_id)
     if not guild:
@@ -1935,15 +1883,17 @@ async def on_raw_reaction_remove(payload: discord.RawReactionActionEvent):
     # Check all feature pickers using hardcoded message IDs
     matched_feature = None
     msg_id = str(payload.message_id)
-    for feature in ["warm", "chill", "typology"]:
-        if msg_id == HARDCODED[f"role_picker_message_{feature}"]:
+    for feature in ["casual", "typology"]:
+        if msg_id == HARDCODED.get(f"role_picker_message_{feature}"):
             matched_feature = feature
             break
     
     if not matched_feature:
         return
 
-    role_id = HARDCODED[f"ping_role_{matched_feature}"]
+    role_id = HARDCODED.get(f"ping_role_{matched_feature}")
+    if not role_id:
+        return
 
     guild = bot.get_guild(payload.guild_id)
     if not guild:
@@ -2217,6 +2167,63 @@ async def on_message(message: discord.Message):
             await message.delete()
         except Exception as e:
             confirm = await message.channel.send(f"{message.author.mention} ❌ Error: {str(e)}", delete_after=8)
+            try:
+                await message.delete()
+            except Exception:
+                pass
+        return
+
+    # --- !updateembed command (temporary, for updating role picker embeds) ---
+    # Reply to a role picker message and type !updateembed to auto-update it
+    if content_lower == "!updateembed":
+        # Admin only
+        if not message.author.guild_permissions.administrator:
+            return
+        
+        # Must be a reply
+        if not message.reference:
+            await message.channel.send("❌ Reply to a role picker message to update it!", delete_after=5)
+            try:
+                await message.delete()
+            except Exception:
+                pass
+            return
+        
+        try:
+            replied_msg = await message.channel.fetch_message(message.reference.message_id)
+            msg_id = str(replied_msg.id)
+            
+            # Check if it's one of our role picker messages
+            if msg_id == HARDCODED["role_picker_message_casual"]:
+                new_embed = discord.Embed(
+                    title="🔔 💬 Casual Questions Notifications",
+                    description=(
+                        "React with 👍 to get the <@&1470111189869527131> role and be pinged for Casual Questions\n\n"
+                        "Includes: Fun creative questions and yes/no polls\n"
+                        "Unreact to remove the role."
+                    ),
+                    color=int(config.COLORS["casual"], 16)
+                )
+                await replied_msg.edit(embed=new_embed)
+                await message.channel.send("✅ Updated casual role picker!", delete_after=5)
+            elif msg_id == HARDCODED["role_picker_message_typology"]:
+                new_embed = discord.Embed(
+                    title="🔔 ✨ Typology Questions Notifications",
+                    description=(
+                        "React with 👍 to get the <@&1470111535559999590> role and be pinged for Typology Questions\n\n"
+                        "Includes: Typology matchups, hot takes, and 'who is most likely to' questions\n"
+                        "Unreact to remove the role."
+                    ),
+                    color=int(config.COLORS["typology"], 16)
+                )
+                await replied_msg.edit(embed=new_embed)
+                await message.channel.send("✅ Updated typology role picker!", delete_after=5)
+            else:
+                await message.channel.send("❌ That's not a role picker message I recognize.", delete_after=5)
+            
+            await message.delete()
+        except Exception as e:
+            await message.channel.send(f"❌ Error: {str(e)}", delete_after=8)
             try:
                 await message.delete()
             except Exception:
