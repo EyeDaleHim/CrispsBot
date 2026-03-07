@@ -52,6 +52,7 @@ HARDCODED = {
     "channel_activity_rewards": "1446277377771573402",
     "channel_chatter_rewards": "1470204258992390164",
     "channel_hall_of_fame": "1479638228834189457",
+    "backup_message_id": "1479654378842357810",
     "role_picker_message_warm": "1470113538994606160",
     "role_picker_message_chill": "1470113556476334182",
     "role_picker_message_typology": "1470113576017723564",
@@ -250,7 +251,7 @@ SYLLABLE_OVERRIDES = {
     "making": 2, "many": 2, "matter": 2, "maybe": 2, "meaning": 2, "metal": 2, "minute": 2, "moment": 2, "money": 2, "mother": 2, "moving": 2, "music": 2, "myself": 2,
     "nature": 2, "never": 2, "nothing": 2, "number": 2,
     "often": 2, "only": 2, "open": 2, "order": 2, "other": 2, "others": 2, "over": 2,
-    "paper": 2, "party": 2, "people": 2, "person": 2, "picture": 2, "places": 2, "playing": 2, "power": 2, "problem": 2,
+    "paper": 2, "party": 2, "people": 2, "person": 2, "picture": 2, "places": 2, "playing": 2, "poet": 2, "power": 2, "problem": 2,
     "quickly": 2, "quiet": 2,
     "really": 2, "reason": 2, "river": 2, "running": 2,
     "second": 2, "seeing": 2, "seems": 1, "seven": 2, "shadow": 2, "simple": 2, "sister": 2, "sitting": 2, "slowly": 2, "smaller": 2, "something": 2, "sometimes": 2, "sorry": 2, "standing": 2, "started": 2, "story": 2, "student": 2, "system": 2,
@@ -287,11 +288,11 @@ SYLLABLE_OVERRIDES = {
     "unfortunately": 5, "university": 5,
     
     # Typology terms
-    "intj": 2, "intp": 2, "entj": 2, "entp": 2,
-    "infj": 2, "infp": 2, "enfj": 2, "enfp": 2,
-    "istj": 2, "istp": 2, "estj": 2, "estp": 2,
-    "isfj": 2, "isfp": 2, "esfj": 2, "esfp": 2,
-    "mbti": 2, "socionics": 4, "enneagram": 4,
+    "intj": 4, "intp": 4, "entj": 4, "entp": 4,
+    "infj": 4, "infp": 4, "enfj": 4, "enfp": 4,
+    "istj": 4, "istp": 4, "estj": 4, "estp": 4,
+    "isfj": 4, "isfp": 4, "esfj": 4, "esfp": 4,
+    "mbti": 4, "socionics": 4, "enneagram": 4,
     "introvert": 3, "extrovert": 3, "introversion": 4, "extroversion": 4,
     "intuition": 4, "intuitive": 4, "sensing": 2, "sensor": 2,
     "feeling": 2, "feeler": 2, "thinker": 2, "judging": 2, "perceiving": 3,
@@ -1417,7 +1418,7 @@ async def auto_start_word_game(gid: str) -> bool:
 
 # ---------- Public ----------
 
-BOT_VERSION = "v1.72.2"
+BOT_VERSION = "v1.72.3"
 
 
 @bot.tree.command(name="version", description="Check bot version (debug)")
@@ -1505,15 +1506,7 @@ async def chips_cmd(interaction: discord.Interaction, user: discord.Member, amou
 @app_commands.default_permissions(administrator=True)
 async def exportdata_cmd(interaction: discord.Interaction):
     gid = str(interaction.guild_id)
-    
-    # Check if backup message exists
-    backup_msg_id = await db.get_state(gid, "backup_message_id")
-    if not backup_msg_id:
-        await interaction.response.send_message(
-            "❌ No backup message set up. Use `!placedata` in a channel first to create one.",
-            ephemeral=True
-        )
-        return
+    backup_msg_id = HARDCODED["backup_message_id"]
     
     await interaction.response.defer(ephemeral=True)
     
@@ -1614,9 +1607,7 @@ async def importdata_cmd(interaction: discord.Interaction, data: str):
 
 async def do_autosave(guild_id: str):
     """Auto-save bot data by editing the backup message."""
-    backup_msg_id = await db.get_state(guild_id, "backup_message_id")
-    if not backup_msg_id:
-        return
+    backup_msg_id = HARDCODED["backup_message_id"]
     
     # Find the message - check all text channels
     backup_msg = None
@@ -2327,15 +2318,15 @@ async def on_message(message: discord.Message):
                 await db.update_word_game_message(gid, str(new_msg.id))
 
     # --- !placedata command (temporary, for setting up backup message) ---
-    if content_lower == "!placedata":
-        if message.author.guild_permissions.administrator:
-            gid = str(message.guild.id)
-            now = datetime.now(MANILA_TZ)
-            timestamp = now.strftime("%b %d, %Y at %I:%M %p")
-            backup_msg = await message.channel.send(f"```\n\n```\nLast saved: {timestamp}")
-            await db.set_state(gid, "backup_message_id", str(backup_msg.id))
-            await message.reply(f"Backup message placed! ID: `{backup_msg.id}`", mention_author=False)
-        return
+    # if content_lower == "!placedata":
+    #     if message.author.guild_permissions.administrator:
+    #         gid = str(message.guild.id)
+    #         now = datetime.now(MANILA_TZ)
+    #         timestamp = now.strftime("%b %d, %Y at %I:%M %p")
+    #         backup_msg = await message.channel.send(f"```\n\n```\nLast saved: {timestamp}")
+    #         await db.set_state(gid, "backup_message_id", str(backup_msg.id))
+    #         await message.reply(f"Backup message placed! ID: `{backup_msg.id}`", mention_author=False)
+    #     return
 
     await bot.process_commands(message)
 
