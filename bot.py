@@ -51,6 +51,7 @@ HARDCODED = {
     "channel_codepurple": "1446277377771573402",
     "channel_activity_rewards": "1446277377771573402",
     "channel_chatter_rewards": "1470204258992390164",
+    "channel_hall_of_fame": "1479638228834189457",
     "role_picker_message_warm": "1470113538994606160",
     "role_picker_message_chill": "1470113556476334182",
     "role_picker_message_typology": "1470113576017723564",
@@ -58,10 +59,160 @@ HARDCODED = {
     "blacklist_channels": [],
 }
 
+# Hall of Fame: track which messages have been forwarded (in-memory cache)
+_hall_of_fame_forwarded: set[int] = set()
+
 
 def fmt_num(n: int) -> str:
     """Format number with comma separators: 1000000 -> 1,000,000"""
     return f"{n:,}"
+
+
+# ======================== HAIKU DETECTION ========================
+
+# Slang/abbreviations that disqualify a message from being a haiku
+HAIKU_DISQUALIFY_WORDS = {
+    "idk", "lmfao", "lmao", "omg", "wtf", "wth", "brb", "afk", "imo", "imho",
+    "tbh", "ngl", "ikr", "smh", "fyi", "btw", "irl", "omfg", "rofl", "stfu", "gtfo",
+    "nvm", "jk", "bc", "cuz", "rn", "atm", "asap", "dm",
+    "gg", "wp", "ez", "pog", "poggers", "kek", "kekw", "copium", "hopium", "sus",
+    "thx", "ty", "yw", "np", "pls", "plz", "w/", "w/o", "b4", "2day", "2moro",
+    "ofc", "obv", "obvs", "prolly", "prob", "rly", "srsly", "tru", "fr",
+    "ong", "istg", "istfg", "icl", "nah", "yh", "yea", "ye", "yee", "yeet",
+    "bruh", "bro", "dude", "fam", "goat", "goated", "mid", "based", "cringe",
+    "lowkey", "highkey", "deadass", "bussin", "slay", "periodt", "oop", "sksksk",
+    "hbu", "wbu", "hmu", "lmk", "ttyl", "g2g", "gtg", "cya", "l8r",
+}
+
+
+def count_syllables(word: str) -> int | None:
+    """
+    Count syllables in a word using vowel patterns.
+    Returns None if the word cannot be reliably syllable-counted (slang, numbers, etc).
+    """
+    word = word.lower().strip()
+    
+    # Skip empty or pure punctuation
+    if not word or not any(c.isalpha() for c in word):
+        return 0
+    
+    # Remove non-alpha characters for counting
+    clean = ''.join(c for c in word if c.isalpha())
+    
+    if not clean:
+        return 0
+    
+    # Check if it's a disqualified slang word
+    if clean in HAIKU_DISQUALIFY_WORDS:
+        return None
+    
+    # Check for numbers mixed with letters (like "2day") or pure numbers spelled
+    if any(c.isdigit() for c in word):
+        return None
+    
+    # Check for excessive consonant clusters that suggest abbreviation
+    vowels = set('aeiouy')
+    if len(clean) >= 3 and not any(c in vowels for c in clean):
+        return None
+    
+    # Basic syllable counting algorithm
+    count = 0
+    prev_was_vowel = False
+    
+    for i, char in enumerate(clean):
+        is_vowel = char in vowels
+        if is_vowel and not prev_was_vowel:
+            count += 1
+        prev_was_vowel = is_vowel
+    
+    # Handle silent 'e' at end
+    if clean.endswith('e') and count > 1 and len(clean) > 2:
+        if clean[-2] not in vowels:  # consonant before final e
+            count -= 1
+    
+    # Handle 'le' endings (like "table", "apple")
+    if clean.endswith('le') and len(clean) > 2 and clean[-3] not in vowels:
+        count += 1
+    
+    # Minimum 1 syllable for any real word
+    return max(1, count)
+
+
+def check_haiku(text: str) -> tuple[bool, list[str] | None]:
+    """
+    Check if text is a valid haiku (5-7-5 syllables).
+    Returns (is_haiku, [line1, line2, line3]) or (False, None).
+    """
+    # Clean the text - remove extra whitespace, keep only words
+    words = text.split()
+    if not words:
+        return False, None
+    
+    # Count syllables for each word
+    syllable_counts = []
+    word_list = []
+    
+    for word in words:
+        # Strip punctuation from edges
+        clean_word = word.strip('.,!?;:"\'()-[]{}…—–')
+        if not clean_word:
+            continue
+        
+        count = count_syllables(clean_word)
+        if count is None:  # Disqualified word
+            return False, None
+        
+        if count > 0:
+            syllable_counts.append(count)
+            word_list.append(clean_word)
+    
+    # Check if total syllables is 17 (5+7+5)
+    total = sum(syllable_counts)
+    if total != 17:
+        return False, None
+    
+    # Try to split into 5-7-5 pattern
+    line1_words = []
+    line2_words = []
+    line3_words = []
+    
+    current_count = 0
+    line_idx = 0
+    targets = [5, 7, 5]
+    
+    for i, (word, syl_count) in enumerate(zip(word_list, syllable_counts)):
+        if line_idx == 0:
+            line1_words.append(word)
+            current_count += syl_count
+            if current_count == targets[0]:
+                line_idx = 1
+                current_count = 0
+            elif current_count > targets[0]:
+                return False, None
+        elif line_idx == 1:
+            line2_words.append(word)
+            current_count += syl_count
+            if current_count == targets[1]:
+                line_idx = 2
+                current_count = 0
+            elif current_count > targets[1]:
+                return False, None
+        else:
+            line3_words.append(word)
+            current_count += syl_count
+    
+    # Verify we got exactly 5-7-5
+    if line_idx != 2 or current_count != 5:
+        return False, None
+    
+    if not line1_words or not line2_words or not line3_words:
+        return False, None
+    
+    return True, [
+        " ".join(line1_words),
+        " ".join(line2_words),
+        " ".join(line3_words),
+    ]
 
 
 # ======================== HELPERS ========================
@@ -371,7 +522,7 @@ async def post_chill(guild_id: str, ping: bool = True, channel: discord.TextChan
 
 
 async def post_typology(guild_id: str, ping: bool = True, channel: discord.TextChannel = None):
-    """Post a typology question (Comparing types, Personal typology, or Friend group) using type+question bags."""
+    """Post a typology question (Matchups, Hot Takes, or Scenarios) using type+question bags."""
     if not channel:
         channel_id = HARDCODED["channel_typology"]
         channel = bot.get_channel(int(channel_id))
@@ -379,7 +530,7 @@ async def post_typology(guild_id: str, ping: bool = True, channel: discord.TextC
         print(f"[Typology] Could not find channel")
         return
 
-    categories = ["comparing", "personal", "friendgroup"]
+    categories = ["matchups", "hottakes", "scenarios"]
     
     used_types = await db.get_used_questions(guild_id, "typology_type")
     if len(used_types) >= len(categories):
@@ -390,24 +541,45 @@ async def post_typology(guild_id: str, ping: bool = True, channel: discord.TextC
     await db.mark_question_used(guild_id, "typology_type", type_idx)
     
     category = categories[type_idx]
+    reactions_to_add = []
     
-    if category == "comparing":
-        type1 = f"{random.choice(config.MBTI_TYPES)} {random.choice(config.ENNEAGRAM_TYPES)}"
-        type2 = type1
-        while type2 == type1:
-            type2 = f"{random.choice(config.MBTI_TYPES)} {random.choice(config.ENNEAGRAM_TYPES)}"
+    if category == "matchups":
+        # Pick unused matchup
+        matchups = config.REALISTIC_TYPE_MATCHUPS
+        used_matchups = await db.get_used_questions(guild_id, "typology_matchups")
+        if len(used_matchups) >= len(matchups):
+            await db.reset_questions(guild_id, "typology_matchups")
+            used_matchups = []
+        available_matchups = [i for i in range(len(matchups)) if i not in used_matchups]
+        matchup_idx = random.choice(available_matchups)
+        await db.mark_question_used(guild_id, "typology_matchups", matchup_idx)
         
-        question_template = await get_unused_question(guild_id, "typology_comparing", config.TYPOLOGY_QUESTIONS)
-        description = f"**{type1}** or **{type2}**\n\n{question_template}"
-        footer_text = "Comparing Types"
-    elif category == "personal":
-        question = await get_unused_question(guild_id, "typology_personal", config.PERSONAL_TYPOLOGY_QUESTIONS)
-        description = question
-        footer_text = "Personal Typology"
+        matchup = matchups[matchup_idx]
+        question = random.choice(matchup["questions"])
+        description = f"1️⃣ **{matchup['type1']}**  vs  2️⃣ **{matchup['type2']}**\n\n{question}"
+        footer_text = "Type Matchup"
+        reactions_to_add = ["1️⃣", "2️⃣"]
+    elif category == "hottakes":
+        # Pick unused hot take
+        hot_take = await get_unused_question(guild_id, "typology_hottakes", config.TYPOLOGY_HOT_TAKES)
+        description = f"🔥 **Hot Take**\n\n\"{hot_take}\"\n\n👍 Agree  ·  👎 Disagree"
+        footer_text = "Hot Take"
+        reactions_to_add = ["👍", "👎"]
     else:
-        question = await get_unused_question(guild_id, "typology_friendgroup", config.FRIEND_GROUP_QUESTIONS)
-        description = question
-        footer_text = "Friend Group"
+        # Pick unused scenario
+        scenarios = config.SCENARIO_ROLE_ASSIGNMENTS
+        used_scenarios = await db.get_used_questions(guild_id, "typology_scenarios")
+        if len(used_scenarios) >= len(scenarios):
+            await db.reset_questions(guild_id, "typology_scenarios")
+            used_scenarios = []
+        available_scenarios = [i for i in range(len(scenarios)) if i not in used_scenarios]
+        scenario_idx = random.choice(available_scenarios)
+        await db.mark_question_used(guild_id, "typology_scenarios", scenario_idx)
+        
+        scenario = scenarios[scenario_idx]
+        roles_list = "\n".join([f"• {role}" for role in scenario["roles"]])
+        description = f"🎬 **{scenario['scenario']}**\n\nAssign roles to the group:\n{roles_list}"
+        footer_text = "Scenario Roles"
     
     count_str = await db.get_state(guild_id, "typology_question_count") or "0"
     count = int(count_str) + 1
@@ -424,9 +596,16 @@ async def post_typology(guild_id: str, ping: bool = True, channel: discord.TextC
     if ping:
         ping_role_id = HARDCODED["ping_role_typology"]
         content = f"<@&{ping_role_id}>"
-        await channel.send(content=content, embed=embed, view=view, allowed_mentions=discord.AllowedMentions(roles=True))
+        msg = await channel.send(content=content, embed=embed, view=view, allowed_mentions=discord.AllowedMentions(roles=True))
     else:
-        await channel.send(embed=embed, view=view)
+        msg = await channel.send(embed=embed, view=view)
+    
+    # Add voting reactions
+    for reaction in reactions_to_add:
+        try:
+            await msg.add_reaction(reaction)
+        except Exception:
+            pass
 
 
 # Map question type → post function
@@ -618,7 +797,8 @@ async def do_chatter_rewards(guild_id: str):
             msg_templates[i].format(
                 user=f"<@{user['user_id']}>",
                 amount=fmt_num(rewards[i]),
-                emoji=emoji
+                emoji=emoji,
+                messages=user["message_count"]
             )
         )
 
@@ -1364,9 +1544,62 @@ async def on_ready():
 
 @bot.event
 async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
-    """Handle reaction role picker — add role on 👍 react."""
+    """Handle reaction role picker and Hall of Fame forwarding."""
     if payload.user_id == bot.user.id:
         return
+    
+    # --- Hall of Fame: forward messages with 4+ reactions of the SAME emoji ---
+    # (Temporarily set to 1 😭 for testing)
+    HOF_THRESHOLD = 1  # Change back to 4 after testing
+    hof_channel_id = HARDCODED.get("channel_hall_of_fame")
+    if hof_channel_id and payload.message_id not in _hall_of_fame_forwarded:
+        try:
+            channel = bot.get_channel(payload.channel_id)
+            if channel:
+                message = await channel.fetch_message(payload.message_id)
+                # Check if any single emoji has reached threshold
+                qualifying_reaction = None
+                for r in message.reactions:
+                    if r.count >= HOF_THRESHOLD:
+                        qualifying_reaction = r
+                        break
+                if qualifying_reaction:
+                    # Mark as forwarded to prevent duplicates
+                    _hall_of_fame_forwarded.add(payload.message_id)
+                    
+                    hof_channel = bot.get_channel(int(hof_channel_id))
+                    if hof_channel:
+                        # Build the forward embed
+                        embed = discord.Embed(
+                            description=message.content or "*[No text content]*",
+                            color=discord.Color.gold(),
+                            timestamp=message.created_at
+                        )
+                        embed.set_author(
+                            name=message.author.display_name,
+                            icon_url=message.author.display_avatar.url if message.author.display_avatar else None
+                        )
+                        embed.add_field(
+                            name="Reactions",
+                            value=" ".join([f"{r.emoji} {r.count}" for r in message.reactions]),
+                            inline=False
+                        )
+                        embed.add_field(
+                            name="Source",
+                            value=f"[Jump to message]({message.jump_url})",
+                            inline=False
+                        )
+                        
+                        # Handle attachments
+                        if message.attachments:
+                            embed.set_image(url=message.attachments[0].url)
+                        
+                        await hof_channel.send(embed=embed)
+                        print(f"[HallOfFame] Forwarded message {payload.message_id}")
+        except Exception as e:
+            print(f"[HallOfFame] Error: {e}")
+    
+    # --- Reaction Role Picker (👍 only) ---
     if str(payload.emoji) != "👍":
         return
 
@@ -1473,6 +1706,13 @@ async def on_message(message: discord.Message):
     if not is_spam:
         await db.increment_chatter(gid, uid, message.author.display_name)
         await db.increment_activity_message(gid, uid, message.author.display_name)
+
+    # --- Haiku Detection ---
+    is_haiku, haiku_lines = check_haiku(message.content)
+    if is_haiku:
+        haiku_reply = "Nice haiku bro:\n"
+        haiku_reply += "\n".join([f"> *{line}*" for line in haiku_lines])
+        await message.reply(haiku_reply, mention_author=False)
 
     # --- !typology or !t command to create typology cards ---
     content_lower = message.content.lower().strip()

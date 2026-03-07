@@ -132,9 +132,9 @@ MESSAGES = {
     ],
     "chatter_reward": {
         "announcement": "**Daily Chatter Rewards 💬**",
-        "top_chatter": "🥇 **{user}** — **+{amount} {emoji}**",
-        "second_chatter": "🥈 **{user}** — **+{amount} {emoji}**",
-        "third_chatter": "🥉 **{user}** — **+{amount} {emoji}**",
+        "top_chatter": "🥇 **{user}** — **+{amount} {emoji}** ({messages} msgs)",
+        "second_chatter": "🥈 **{user}** — **+{amount} {emoji}** ({messages} msgs)",
+        "third_chatter": "🥉 **{user}** — **+{amount} {emoji}** ({messages} msgs)",
         "no_activity": "Nobody chatted today. No rewards.",
     },
     "balance": {
@@ -214,399 +214,1585 @@ MBTI_COLORS = {
 }
 MBTI_DEFAULT_COLOR = "5865F2"
 
-TYPOLOGY_QUESTIONS = [
-    "Who would you prefer as your teacher?",
-    "Who would you rather hang out with for an entire day?",
-    "Who would you trust more to handle conflict in a group setting?",
-    "Who would you trust more with a secret?",
-    "Who would you rather party with?",
-    "Who do you think would win in a debate?",
-    "Who would you prefer as your project leader?",
-    "Who would you rather go on a road trip with?",
-    "Who do you think is more likely to start a business?",
-    "Who would you rather go to for life advice?",
-    "Who would you rather have as a roommate?",
-    "Who do you think would win in a trivia competition?",
-    "Who would you trust more to handle stress during a crisis?",
-    "Who do you think is more likely to make you laugh?",
-    "Who would you trust to plan your birthday party?",
-    "Who would you prefer as your therapist?",
-    "Who would you rather work on a group project with?",
-    "Who do you think would win in a chess match?",
-    "Who would you rather travel with internationally?",
-    "Who do you think would handle a breakup more gracefully?",
-    "Who would you want on your trivia team?",
-    "Who would you trust more to negotiate a raise?",
-    "Who do you think would win in a cooking competition?",
-    "Who would you prefer as your loyal friend?",
-    "Who would you rather have as your mentor?",
-    "Who would you trust more in awkward social situations?",
-    "Who would you prefer for a long-distance friendship?",
-    "Who would you trust to give honest feedback?",
-    "Who do you think would win at a creative challenge?",
-    "Who would you prefer as your creative partner?",
-    "Who do you think is more likely to remember your birthday?",
-    "Who would you rather debate with?",
-    "Who would you prefer to comfort you when sad?",
-    "Who do you think would handle rejection more gracefully?",
-    "Who would you prefer as your podcast co-host?",
-    "Who do you think would win in a physical challenge?",
-    "Who would you rather share an apartment with?",
-    "Who would you trust more to keep you motivated?",
-    "Who would you rather have a prank war with?",
-    "Who would you trust to help you move?",
-    "Who do you think would win at solving a mystery?",
-    "Who would you rather choose as study partners?",
-    "Who do you think is more likely to defend you in an argument?",
-    "Who would you rather have plan your wedding?",
-    "Who would you prefer as your dinner party host?",
-    "Who do you think would handle long work hours better?",
-    "Who would you trust more with your pet?",
-    "Who do you think would win in a survival situation?",
-    "Who would you rather have as your backpacking travel companion?",
-    "Who would you prefer for support during tough times?",
-    "Who do you think would handle sudden change better?",
-    "Who would you rather collaborate with on creative work?",
-    "Who would you prefer to cheer you up?",
-    "Who would you rather have a conversation with?",
-    "Who do you think would handle public speaking better?",
-    "Who do you think would win at video games?",
-    "Who would you rather receive criticism from?",
-    "Who would you prefer to organize an event?",
-    "Who would you prefer as your emergency contact?",
+# ==================== REALISTIC TYPE MATCHUPS ====================
+# Pre-curated MBTI + Enneagram pairings with tailored comparison questions
+
+REALISTIC_TYPE_MATCHUPS = [
+    {
+        "type1": "INFP 4w5",
+        "type2": "ENTJ 8w7",
+        "questions": [
+            "Who would you trust more to lead a passion project you care about?",
+            "Who handles criticism about their work better?",
+            "Who would you rather vent to after a terrible day?",
+            "Who's more likely to actually finish what they started?",
+        ]
+    },
+    {
+        "type1": "ENFP 7w6",
+        "type2": "ISTJ 6w5",
+        "questions": [
+            "Who would you trust to remember an important deadline?",
+            "Who would make a better travel companion for a spontaneous trip?",
+            "Who gives more practical life advice?",
+            "Who would you rather have plan your birthday party?",
+        ]
+    },
+    {
+        "type1": "INFJ 5w4",
+        "type2": "ESTP 7w8",
+        "questions": [
+            "Who would you trust more in a crisis situation?",
+            "Who gives better advice about relationships?",
+            "Who would you rather go on an adventure with?",
+            "Who understands you on a deeper level?",
+        ]
+    },
+    {
+        "type1": "INTJ 1w9",
+        "type2": "ESFP 7w8",
+        "questions": [
+            "Who would you rather spend a weekend with?",
+            "Who handles unexpected changes better?",
+            "Who gives more honest feedback?",
+            "Who would you trust to teach you a new skill?",
+        ]
+    },
+    {
+        "type1": "ISFJ 9w1",
+        "type2": "ENTP 7w6",
+        "questions": [
+            "Who would you trust more to keep a secret?",
+            "Who's better at making you feel comfortable?",
+            "Who would win in a debate about something neither knows well?",
+            "Who would you rather have as a roommate?",
+        ]
+    },
+    {
+        "type1": "INTP 5w6",
+        "type2": "ESFJ 2w3",
+        "questions": [
+            "Who would you go to for emotional support?",
+            "Who gives more useful technical advice?",
+            "Who would you trust to organize a group event?",
+            "Who reads social situations better?",
+        ]
+    },
+    {
+        "type1": "ENFJ 2w1",
+        "type2": "ISTP 9w8",
+        "questions": [
+            "Who would you trust more to mediate a conflict?",
+            "Who's more reliable in an emergency?",
+            "Who gives less biased advice?",
+            "Who would you rather work on a team project with?",
+        ]
+    },
+    {
+        "type1": "ISFP 9w8",
+        "type2": "ESTJ 1w2",
+        "questions": [
+            "Who would you trust to respect your boundaries?",
+            "Who gets things done more efficiently?",
+            "Who would you rather have as a boss?",
+            "Who's easier to be yourself around?",
+        ]
+    },
+    {
+        "type1": "INFP 9w1",
+        "type2": "ENTP 3w4",
+        "questions": [
+            "Who would you trust more with your creative ideas?",
+            "Who's better at turning ideas into action?",
+            "Who would you rather brainstorm with?",
+            "Who handles rejection more gracefully?",
+        ]
+    },
+    {
+        "type1": "INTJ 5w6",
+        "type2": "ENFP 4w3",
+        "questions": [
+            "Who would you trust more to follow through on plans?",
+            "Who brings more energy to a conversation?",
+            "Who would you go to for career advice?",
+            "Who's more likely to remember your preferences?",
+        ]
+    },
+    {
+        "type1": "ESTP 8w7",
+        "type2": "INFJ 4w5",
+        "questions": [
+            "Who handles high-pressure situations better?",
+            "Who would you trust with your deepest insecurities?",
+            "Who would you rather party with?",
+            "Who's more likely to notice something's wrong with you?",
+        ]
+    },
+    {
+        "type1": "ESFJ 6w7",
+        "type2": "INTP 5w4",
+        "questions": [
+            "Who makes you feel more included?",
+            "Who gives more intellectually honest answers?",
+            "Who would you trust to host a dinner party?",
+            "Who would you ask to proofread something important?",
+        ]
+    },
+    {
+        "type1": "ENTJ 3w2",
+        "type2": "ISFP 4w5",
+        "questions": [
+            "Who would you trust to lead a creative project?",
+            "Who's easier to have a vulnerable conversation with?",
+            "Who would you rather learn a skill from?",
+            "Who handles ambiguity better?",
+        ]
+    },
+    {
+        "type1": "ISTJ 1w9",
+        "type2": "ENFP 7w6",
+        "questions": [
+            "Who would you trust with an important task?",
+            "Who makes mundane activities more fun?",
+            "Who gives more grounded advice?",
+            "Who would you rather travel internationally with?",
+        ]
+    },
+    {
+        "type1": "INFJ 1w2",
+        "type2": "ESTP 3w2",
+        "questions": [
+            "Who would you trust more for moral guidance?",
+            "Who's better at networking and making connections?",
+            "Who handles conflict more directly?",
+            "Who would you rather have negotiate on your behalf?",
+        ]
+    },
+    {
+        "type1": "ISTP 5w6",
+        "type2": "ENFJ 3w2",
+        "questions": [
+            "Who understands mechanical/technical problems better?",
+            "Who's better at motivating a group?",
+            "Who would you trust more for unbiased analysis?",
+            "Who would you rather have manage your team?",
+        ]
+    },
+    {
+        "type1": "ESFP 2w3",
+        "type2": "INTJ 3w4",
+        "questions": [
+            "Who would you rather go to a concert with?",
+            "Who gives more strategic advice?",
+            "Who's easier to have fun with?",
+            "Who would you trust to plan a long-term project?",
+        ]
+    },
+    {
+        "type1": "ENTP 8w7",
+        "type2": "ISFJ 6w5",
+        "questions": [
+            "Who would you rather debate with?",
+            "Who would you trust more to remember important details?",
+            "Who handles tradition and routine better?",
+            "Who would you want defending you in an argument?",
+        ]
+    },
+    {
+        "type1": "INFP 6w5",
+        "type2": "ESTJ 8w9",
+        "questions": [
+            "Who understands your emotional needs better?",
+            "Who gets practical things done faster?",
+            "Who would you trust more in unfamiliar situations?",
+            "Who would you rather have as a mentor?",
+        ]
+    },
+    {
+        "type1": "ENFJ 1w2",
+        "type2": "INTP 9w8",
+        "questions": [
+            "Who would you go to for life direction advice?",
+            "Who's more comfortable with silence?",
+            "Who would you trust to see all perspectives fairly?",
+            "Who would you rather collaborate with on research?",
+        ]
+    },
+    {
+        "type1": "ISFP 6w7",
+        "type2": "ENTJ 1w2",
+        "questions": [
+            "Who's easier to relax around?",
+            "Who would you trust more to achieve a difficult goal?",
+            "Who respects your pace better?",
+            "Who would you want organizing an important event?",
+        ]
+    },
+    {
+        "type1": "ESFJ 1w2",
+        "type2": "ISTP 9w1",
+        "questions": [
+            "Who makes you feel more cared for?",
+            "Who's better at staying calm under pressure?",
+            "Who gives more emotionally supportive advice?",
+            "Who would you trust to fix something broken?",
+        ]
+    },
+    {
+        "type1": "ENTP 5w6",
+        "type2": "ISFP 9w1",
+        "questions": [
+            "Who would you rather have a philosophical conversation with?",
+            "Who's more grounded in the present moment?",
+            "Who adapts faster to new ideas?",
+            "Who would you trust more for creative collaboration?",
+        ]
+    },
+    {
+        "type1": "ESTJ 3w2",
+        "type2": "INFP 4w5",
+        "questions": [
+            "Who would you trust to manage a project deadline?",
+            "Who understands your inner world better?",
+            "Who would you rather receive feedback from?",
+            "Who would you go to when you need motivation?",
+        ]
+    },
+    {
+        "type1": "INTJ 6w5",
+        "type2": "ESFP 9w8",
+        "questions": [
+            "Who would you trust for strategic planning?",
+            "Who's more fun at a party?",
+            "Who handles uncertainty more gracefully?",
+            "Who would you rather spend a lazy Sunday with?",
+        ]
+    },
+    {
+        "type1": "ENFP 2w3",
+        "type2": "ISTJ 9w1",
+        "questions": [
+            "Who would you trust more to remember your preferences?",
+            "Who keeps commitments more reliably?",
+            "Who makes you feel more appreciated?",
+            "Who would you rather have coordinate logistics?",
+        ]
+    },
+    {
+        "type1": "INFJ 6w5",
+        "type2": "ESTP 8w9",
+        "questions": [
+            "Who would you trust more for personal advice?",
+            "Who handles immediate problems better?",
+            "Who do you feel safer being vulnerable with?",
+            "Who would you want in your corner during a confrontation?",
+        ]
+    },
+    {
+        "type1": "ISTP 8w9",
+        "type2": "ENFP 4w5",
+        "questions": [
+            "Who would you trust more in a survival situation?",
+            "Who's better at exploring new ideas together?",
+            "Who's more practical in their approach?",
+            "Who would you rather go on a road trip with?",
+        ]
+    },
+    {
+        "type1": "ENTP 7w8",
+        "type2": "ISFJ 2w1",
+        "questions": [
+            "Who would you trust more to remember what you said last week?",
+            "Who's better at keeping traditions alive?",
+            "Who would you rather have argue your case in court?",
+            "Who makes you feel more appreciated?",
+            "Who handles boredom worse?",
+        ]
+    },
+    {
+        "type1": "INTJ 3w4",
+        "type2": "ESFP 2w3",
+        "questions": [
+            "Who's easier to read emotionally?",
+            "Who would you trust to execute a complex plan?",
+            "Who's more fun at a party?",
+            "Who handles public attention better?",
+            "Who would you rather receive honest feedback from?",
+        ]
+    },
+    {
+        "type1": "INFP 9w1",
+        "type2": "ESTJ 1w2",
+        "questions": [
+            "Who respects your boundaries more?",
+            "Who would you trust to run a meeting?",
+            "Who's harder to get a straight answer from?",
+            "Who would you rather have as a parent?",
+            "Who handles confrontation more gracefully?",
+        ]
+    },
+    {
+        "type1": "ENFJ 2w3",
+        "type2": "INTP 5w4",
+        "questions": [
+            "Who gives better life advice?",
+            "Who's more likely to overthink a text?",
+            "Who would you trust to mediate a fight?",
+            "Who reads the room better?",
+            "Who would you rather brainstorm with at 2am?",
+        ]
+    },
+    {
+        "type1": "ESTP 3w2",
+        "type2": "INFJ 1w9",
+        "questions": [
+            "Who would you trust to handle a high-stakes negotiation?",
+            "Who understands your motivations better?",
+            "Who's more likely to ghost you?",
+            "Who handles moral dilemmas better?",
+            "Who would you rather compete against?",
+        ]
+    },
+    {
+        "type1": "ISFP 4w5",
+        "type2": "ENTJ 1w2",
+        "questions": [
+            "Who's more in touch with their emotions?",
+            "Who would you trust to get results?",
+            "Who's harder to say no to?",
+            "Who would you rather collaborate on art with?",
+            "Who handles power better?",
+        ]
+    },
+    {
+        "type1": "ESFJ 3w2",
+        "type2": "INTP 9w1",
+        "questions": [
+            "Who makes better first impressions?",
+            "Who's more genuine behind closed doors?",
+            "Who would you trust to organize a reunion?",
+            "Who handles awkward silences better?",
+            "Who would you rather debate philosophy with?",
+        ]
+    },
+    {
+        "type1": "ENTP 3w4",
+        "type2": "ISFP 9w8",
+        "questions": [
+            "Who's harder to pin down in conversation?",
+            "Who would you trust to stay calm in chaos?",
+            "Who's more authentic in their self-presentation?",
+            "Who would you rather make music with?",
+            "Who handles being wrong better?",
+        ]
+    },
+    {
+        "type1": "INTJ 1w9",
+        "type2": "ENFP 2w3",
+        "questions": [
+            "Who would you trust with a ten-year plan?",
+            "Who makes friends faster?",
+            "Who's more secretly insecure?",
+            "Who would you rather receive validation from?",
+            "Who handles rejection worse?",
+        ]
+    },
+    {
+        "type1": "ISTP 9w8",
+        "type2": "ENFJ 1w2",
+        "questions": [
+            "Who would you trust to fix something broken?",
+            "Who's better at inspiring a team?",
+            "Who handles emotional conversations better?",
+            "Who's more likely to burn out?",
+            "Who would you rather have as a mentor?",
+        ]
+    },
+    {
+        "type1": "ESFP 7w8",
+        "type2": "INFJ 4w5",
+        "questions": [
+            "Who's more in touch with the present moment?",
+            "Who understands people's hidden motives better?",
+            "Who would you rather explore a new city with?",
+            "Who's more likely to disappear for a few days?",
+            "Who handles loss more gracefully?",
+        ]
+    },
+    {
+        "type1": "ESTJ 8w9",
+        "type2": "INFP 6w5",
+        "questions": [
+            "Who would you trust to manage a crisis?",
+            "Who's more likely to stand up for a stranger?",
+            "Who handles ambiguity worse?",
+            "Who would you rather have on your side in a conflict?",
+            "Who's easier to have a deep conversation with?",
+        ]
+    },
+    {
+        "type1": "ENFP 4w3",
+        "type2": "ISTJ 1w9",
+        "questions": [
+            "Who's more likely to follow through on a promise?",
+            "Who brings more energy to a project?",
+            "Who's harder to truly know?",
+            "Who would you trust with your life savings?",
+            "Who handles creative blocks better?",
+        ]
+    },
+    {
+        "type1": "INTP 6w5",
+        "type2": "ESFJ 9w1",
+        "questions": [
+            "Who would you trust to analyze a complex problem?",
+            "Who makes you feel more at home?",
+            "Who's more anxious under the surface?",
+            "Who would you rather go to for comfort?",
+            "Who handles social pressure better?",
+        ]
+    },
+    {
+        "type1": "ENTJ 8w7",
+        "type2": "ISFJ 1w2",
+        "questions": [
+            "Who would you trust to run an organization?",
+            "Who cares more about your wellbeing?",
+            "Who's harder to argue with?",
+            "Who would you rather have as a boss?",
+            "Who handles criticism more personally?",
+        ]
+    },
 ]
 
-# ==================== PERSONAL TYPOLOGY QUESTIONS ====================
+# ==================== TYPOLOGY HOT TAKES ====================
+# Controversial but discussion-generating statements - Agree or Disagree?
 
-PERSONAL_TYPOLOGY_QUESTIONS = [
-    "What cognitive function do you wish you had more access to?",
-    "If you could swap types with someone for a day, which type would you choose?",
-    "What's a typology stereotype about your type that you actually fit?",
-    "What's a typology stereotype about your type that annoys you the most?",
-    "Which cognitive function do you think is most overrated?",
-    "Which cognitive function do you think is most underrated?",
-    "What's the biggest misconception people have about your type?",
-    "If you were forced to be a different MBTI type, which would you pick?",
-    "What enneagram type do you find most misunderstood?",
-    "What's a trait from your shadow functions that sometimes shows up?",
-    "Which type do you think you'd clash with most and why?",
-    "What's the hardest part about being your type?",
-    "What's the best part about being your type?",
-    "Which type do you secretly admire but would never want to be?",
-    "What cognitive function do you catch yourself overusing?",
-    "What's a 'growth edge' for your type that you struggle with?",
-    "Which type do you think gets stereotyped most unfairly?",
-    "What's a function pair you wish you had instead of your own?",
-    "If your inferior function was suddenly your dominant, how would your life change?",
-    "What type do you think you acted like as a child?",
-    "What enneagram type do you think you'd be if raised differently?",
-    "Which typology system do you find most accurate for you — MBTI, enneagram, AP, or something else?",
-    "What's a cognitive function you used to think you had but realized you don't?",
-    "What's the most 'un-[your type]' thing about you?",
-    "Which type do you find easiest to communicate with?",
-    "Which type do you find hardest to understand?",
-    "What's a question you're tired of people asking about your type?",
-    "What's a function stack you find fascinating but don't fully get?",
-    "If cognitive functions had flavors, what would yours taste like?",
-    "What type do you mistype as most often and why?",
-    "What's an enneagram wing combination you find interesting?",
-    "How does your instinctual stacking show up differently at home vs in public?",
-    "How does your instinctual stacking affect your daily life?",
-    "What's the biggest difference between sp-first and sx-first versions of your enneagram type?",
-    "If you could change your dominant instinct for a week, which would you choose?",
-    "What's a stereotype about your instinctual variant that's actually true for you?",
-    "Which instinctual variant do you find most attractive in others?",
-    "How do you think your blind instinct affects your relationships?",
-    "What's a behavior that screams 'sx-dom' to you?",
-    "What's a behavior that screams 'sp-dom' to you?",
-    "What's a behavior that screams 'so-dom' to you?",
-    "Do you think your instinctual variant or enneagram type affects you more day-to-day?",
-    "What instinctual variant do you think is most misunderstood?",
-    "How would you describe the difference between so3 and sx3?",
-    "Which instinct do you think is hardest to develop as a blind spot?",
-    "What's a hot take you have about instinctual variants?",
-    "Do you relate more to your instinctual stacking or your tritype?",
-    "What enneagram + instinctual combo do you find most fascinating?",
-    "How does your second instinct show up compared to your dominant one?",
-    "What type do you think you'd become under extreme stress?",
-    "What type do you think has the hardest time in modern society?",
-    "What's a type pairing that you think is overrated?",
-    "What's a type pairing you think is underrated?",
-    "Which cognitive function do you find most attractive in others?",
-    "What's a trait coded as your type that you genuinely don't have?",
-    "If you could master one cognitive function overnight, which would it be?",
-    "What type do you think ages the best?",
-    "What's your hottest typology take?",
-    "What enneagram core fear do you relate to even if it's not your type?",
-    "What's a typology meme about your type that's actually accurate?",
-    "Which type do you think gives the best advice?",
-    "Which type do you think gives the worst advice?",
-    "What's a trait from your tertiary function that you've developed?",
-    "If your dominant and auxiliary functions swapped, what would change?",
-    "What's a type combo (MBTI + enneagram) you find intriguing?",
-    "What cognitive function do you wish your friends had more of?",
-    "What's the most annoying thing about being typed?",
-    "Which type do you think handles failure best?",
-    "Which type do you think handles success best?",
-    "What's something about your type that tests don't capture?",
-    "What's a typing you disagree with (celebrities, characters, etc.)?",
-    "If you had to pick a tritype, what would it be and why?",
-    "What's a cognitive function that feels completely foreign to you?",
-    "What's your unpopular opinion about the MBTI community?",
-    "What type do you think you'd parent best or worst?",
-    "What's a function loop you've caught yourself in?",
-    "Which type do you think is most likely to mistype themselves?",
-    "What's a strength of your inferior function you've noticed?",
-    "What type do you think the world needs more of right now?",
-    "What's a typing rabbit hole you went down recently?",
-    "What's the best description of your type you've ever read?",
-    "Which enneagram integration/disintegration line resonates most with you?",
-    "What would you tell someone who just discovered they're your type?",
-    "What's a type you find yourself consistently drawn to as friends?",
-    "What's a type you've dated that surprised you?",
-    "If your cognitive stack was a team, who would be the MVP?",
-    "What type do you think makes the best creative partner?",
-    "What type do you think makes the best work partner?",
-    "What's a cognitive function you used to hate but now appreciate?",
-    "What's something your type tends to avoid but you don't?",
-    "Which type do you think has the most accurate self-image?",
-    "Which type do you think has the least accurate self-image?",
-    "What's a type-related question you wish more people asked?",
-    "What function do you think is hardest to develop later in life?",
-    "If you could give your younger self a 'type manual,' what would it say?",
-    "What type do you think you'd be in a parallel universe?",
-    "What's the weirdest way you've related to your type description?",
-    "What function do you think you use most in conflict?",
-    "What type do you think handles conflict worst?",
-    "What's a type you used to dismiss but now respect?",
-    "If your functions were coworkers, how would they interact?",
-    "What's a type you've met IRL that changed your view of them?",
-    "What enneagram type do you find hardest to read?",
-    "What's a cognitive function you wish was more talked about?",
-    "What type combo would you love to see a deep dive video on?",
-    "What function do you rely on too much in decision-making?",
-    "What type do you think is most self-aware?",
-    "What type do you think is least self-aware?",
-    "What's a typing system you think is underrated?",
-    "What's a typing system you think is overrated?",
-    "If you woke up as your opposite type, what would be hardest?",
-    "What's a shadow function you've caught yourself using?",
-    "Which type do you think experiences the most internal conflict?",
-    "What's a function pair you find harmonious in others?",
-    "What cognitive function do you think gets misidentified most often?",
-    "What's a take about your type that made you feel seen?",
-    "What type do you think tells the best stories?",
-    "What's a type you underestimated until you got to know one?",
-    "What's the most 'typical' thing you do for your type?",
-    "What cognitive function makes you the most uncomfortable?",
-    "What's a personality pattern you've noticed in your family?",
-    "What's a function you've seen in action that impressed you?",
-    "What type do you think has the most unique sense of humor?",
-    "What's a blind spot you've noticed in your own function stack?",
-    "If you could ask any type one question, what would it be?",
-    "What enneagram motivation do you relate to that isn't yours?",
-    "What type do you think is most likely to overthink their type?",
-    "What's a typing you've had to defend to others?",
-    "What function do you think is most misunderstood overall?",
-    "What type would you trust with your most vulnerable moment?",
-    "What's a typology habit you have that others find weird?",
-    "What function shows up most in your hobbies?",
-    "What's a type community online that you enjoy or avoid?",
-    "What type do you think has the strongest gut instincts?",
-    "What's a value your type shares that you don't personally hold?",
-    "What's a trait that's 'off-brand' for your type that you embrace?",
-    "What's the funniest mistyping you've ever witnessed?",
-    "What cognitive function would you want more of in society?",
-    "What type do you think processes emotions the fastest?",
-    "What function do you think is overrepresented in media?",
-    "What type do you think is most likely to research typology deeply?",
-    "What's a function you've seen develop in someone over time?",
-    "What would your type's theme song be?",
-    "What type do you wish had more representation in fiction?",
-    "What cognitive function do you express most in relationships?",
-    "What's the most surprising thing about your enneagram type?",
-    "What type do you find intimidating and why?",
-    "What's a typing you had to sit with before accepting?",
-    "What function do you think modern life suppresses most?",
-    "What type do you think handles uncertainty the best?",
-    "What type do you think handles uncertainty the worst?",
-    "What's a cognitive process you catch yourself explaining to others?",
-    "What's the most healing thing about knowing your type?",
-    "What's a type you relate to in unexpected ways?",
-    "What function would you want to 'borrow' from another type?",
-    "What type do you think asks the best questions?",
-    "What function do you think is crucial for emotional intelligence?",
-    "If your type had a mascot, what would it be?",
-    "What's a typology concept you think gets overcomplicated?",
-    "What's a limit of typology that you've personally experienced?",
-    "What type do you think lives most authentically?",
-    "What's something that only people of your type would understand?",
-    "What cognitive function do you think is most important in leadership?",
-    "What type do you think would survive best in a zombie apocalypse?",
-    "What enneagram growth line have you experienced?",
-    "What function do you notice most in strangers?",
-    "What's the biggest gift your type has to offer the world?",
-    "What do sp-blinds struggle with that sp-doms take for granted?",
-    "What do sx-blinds struggle with that sx-doms take for granted?",
-    "What do so-blinds struggle with that so-doms take for granted?",
-    "How does your instinctual variant affect how you experience your enneagram core fear?",
-    "What's an instinct combo (like sp/sx or so/sp) that you find intriguing?",
-    "Would you rather have sx-blind or so-blind as your stacking?",
-    "What's something you wish people understood about your typology?",
-    "What type you think is most likely to have a type-related existential crisis?",
-    "What's something you wish you could tell your past self before learning about typology?",
-    "Would a world where everyone knew about typology be better or worse, in your opinion, and why?",
-    "Do you think knowing your type changed you for better or worse?",
-    "What's the most surprising thing you learned about yourself through typology?",
-    "Do you think typology makes it easier or harder to connect with people?",
-    "What's something about typology that you think is overemphasized?",
-    "What's something about typology that you think is underemphasized?",
-    "How do you explain typology to people who've never heard of it?",
-    "Do you think typology is more useful for understanding yourself or others?",
-    "What's a common typology debate you're tired of seeing?",
-    "Do you think being mistyped for a long time affected you?",
-    "What made you first get into typology?",
-    "Do you wish you discovered typology earlier or later in life?",
-    "What's the weirdest typology take you've ever heard?",
-    "Do you think typology helps or hurts self-improvement?",
-    "What's your relationship with typology like now vs when you first discovered it?",
-    "Do you think typology can predict compatibility in relationships?",
-    "What's a typology opinion you used to have but completely changed?",
-    "Do you think some types are naturally better at typology than others?",
-    "What's the most useful thing typology has taught you?",
-    "What's the most useless thing about typology in your opinion?",
-    "Do you think typology makes you more judgmental or more understanding?",
-    "What's something you believed about typology that turned out to be wrong?",
-    "Do you think typology has a toxicity problem?",
-    "What's the biggest misconception non-typers have about typology?",
-    "Do you think typology should be kept niche or become mainstream?",
-    "What would you change about the typology community if you could?",
-    "Do you think typology is more science or pseudoscience?",
-    "What's a question you have about typology that no one seems to answer?",
-    "Do you think typology helps with mental health or complicates it?",
-    "What's your unpopular opinion about the enneagram community?",
-    "Do you think you'll still be into typology 5 years from now?",
-    "What's the most relatable typology content you've ever seen?",
-    "What's the most cringe typology content you've ever seen?",
-    "Do you think some typing systems work better for certain people?",
-    "What's a typology resource everyone should check out?",
-    "Do you think knowing someone's type before meeting them helps or hurts?",
-    "What's something typology helped you forgive yourself for?",
-    "Do you think typology excuses bad behavior or explains it?",
-    "What's a part of typology you still don't fully understand?",
-    "Do you prefer learning about typology through videos, articles, or discussions?",
-    "What's the first thing you notice when trying to type someone?",
-    "Do you think you're good at typing people or do you second-guess yourself?",
-    "What's a typing you were confident about but turned out wrong?",
-    "Do you think typology works better for typing yourself or others?",
-    "What's something you wish typology content creators talked about more?",
-    "Do you think typology has made you more or less patient with people?",
-    "What's a typology phrase or term you're tired of hearing?",
+TYPOLOGY_HOT_TAKES = [
+    # Function hot takes
+    "Fi-doms are actually more stubborn than Te-doms.",
+    "Se-doms are better at long-term planning than they get credit for.",
+    "Ti-doms give better emotional support than they're stereotyped to.",
+    "Fe-doms can be more manipulative than Fi-doms.",
+    "Ni-doms are more often wrong about their 'predictions' than right.",
+    "Si-doms are actually more open-minded than Ne-doms in practice.",
+    "Te-doms are more sensitive to criticism than they let on.",
+    "Ne-doms have trouble with depth, not just commitment.",
+    "Inferior Se is more dangerous than inferior Fe.",
+    "Tertiary functions are more influential than auxiliary functions in daily life.",
+    
+    # Type stereotypes challenged
+    "INTJs are actually more emotional than INFPs, they just hide it worse.",
+    "ENFPs are better at finishing projects than they get credit for.",
+    "ISTJs are some of the funniest types when comfortable.",
+    "Most self-typed INFJs are actually ISFJs.",
+    "ESTPs are more introspective than people assume.",
+    "INTPs care more about people than about ideas, deep down.",
+    "ESFJs are underrated for their logical decision-making.",
+    "ENTJs are more insecure than any other type.",
+    "ISFPs have the strongest moral backbone of all types.",
+    "ENTPs talk about ideas to avoid talking about feelings.",
+    
+    # Enneagram hot takes
+    "Type 9s are the most passive-aggressive type.",
+    "Type 4s enjoy their suffering more than they want to admit.",
+    "Type 3s have the weakest sense of identity.",
+    "Type 8s are the most sensitive type, they just cope with aggression.",
+    "Type 5s are more emotional than Type 4s, they just intellectualize it.",
+    "Type 2s give to receive more than they acknowledge.",
+    "Type 1s are angrier than Type 8s.",
+    "Type 6s are more capable than they believe.",
+    "Type 7s are running from themselves, not toward experiences.",
+    "Core type matters less than instinctual variant.",
+    
+    # Pairing/combo hot takes
+    "INFP 4s are the most stereotyped combo and it's usually wrong.",
+    "ENTJ 8s are rarer than the internet suggests.",
+    "INFJ 4s are just mistyped INFP 4s most of the time.",
+    "ENTP 7s are the most chaotic combo and it's not close.",
+    "ISFJ 9s are underrepresented in typology communities.",
+    "INTJ 5s are the most accurate stereotype.",
+    "ENFP 4s are more common than ENFP 7s.",
+    "ISTP 9s are underrated for their competence.",
+    "ESTJ 8s are actually more common than ENTJ 8s.",
+    
+    # Meta takes
+    "Most people mistype because they type who they want to be, not who they are.",
+    "Typing by cognitive functions is less reliable than typing by letters.",
+    "People with trauma are harder to type accurately.",
+    "The 'ideal type' in current culture is ENTP, and it biases self-typing.",
+    "Most typing content is made by intuitives, so sensors get stereotyped unfairly.",
+    "Teenagers can't be accurately typed, they're too in flux.",
+    "Enneagram is more useful than MBTI for understanding relationships.",
+    "MBTI is more useful than enneagram for understanding work style.",
+    "Instinctual variants are the most underrated part of enneagram.",
+    "Most people's wings are just coping mechanisms, not their actual type.",
+    
+    # Behavioral hot takes
+    "Extroverts are better at being alone than introverts are at socializing.",
+    "Judgers are more spontaneous than they admit; perceivers are more routine-dependent.",
+    "Feelers make more logical decisions; thinkers make more emotional ones.",
+    "Sensors are better at abstract thinking than intuitives give them credit for.",
+    "Introverted types are meaner online than extroverted types.",
+    "High Ti users give the worst relationship advice.",
+    "High Fe users create the most drama while trying to avoid it.",
+    "High Ni users are the most likely to end up in a cult.",
+    "High Se users are the best at reading people in real-time.",
+    "High Si users are the most reliable friends long-term.",
+    
+    # Growth/development hot takes
+    "Your inferior function is more developed than you think.",
+    "Most people overidentify with their dominant function.",
+    "Growth looks like becoming more like your opposite type.",
+    "Stress makes you more yourself, not less.",
+    "The healthiest people are hard to type.",
+    "Your type doesn't change, but typing you correctly does.",
+    "Knowing your type can actually limit your growth if used wrong.",
+    "The obsession with finding your 'exact' type misses the point.",
+    "Most function loops are just unhealthy behavior, not type-specific.",
+    "Integration lines in enneagram are more important than disintegration lines.",
+    
+    # Relationship hot takes
+    "INFJs and ENTPs are an overhyped pairing.",
+    "Sensor-intuitive relationships are actually easier than intuitive-intuitive ones.",
+    "Same-type relationships are underrated.",
+    "Type compatibility matters less than attachment style.",
+    "Two Fe-doms in a relationship is a recipe for disaster.",
+    "Fi-Te users are more loyal long-term than Fe-Ti users.",
+    "ENFPs ghost more than any other type.",
+    "ISTJs are the most romantic type when comfortable.",
+    "INTPs are better partners than INTJs.",
+    "Type 2s and Type 8s are a better match than people think.",
+    
+    # Community hot takes
+    "Typology Twitter is more toxic than typology Reddit.",
+    "Most 'type me' posts should be answered with 'you can't type yourself accurately.'",
+    "Socionics is just complicated MBTI with worse marketing.",
+    "Big 5 is more scientifically valid but less useful for self-understanding.",
+    "Tritype is a cope for people who can't pick one enneagram type.",
+    "Attitudinal Psyche will become more popular than MBTI in 5 years.",
+    "Most typology content creators are mistyped themselves.",
+    "The MBTI community has a sensor hate problem.",
+    "Cognitive functions made MBTI worse, not better.",
+    "Typing fictional characters is more useful than typing real people.",
+    
+    # Controversial specific takes
+    "Most INFJs are actually INFPs.",
+    "ENTP and ESTP are harder to tell apart than people admit.",
+    "Type 4s are the most self-absorbed type.",
+    "Type 9s can be just as aggressive as Type 8s, they're just passive about it.",
+    "Ni is the most overrated function.",
+    "Fe is more manipulative than Fi by nature.",
+    "The 'grip' is just an excuse for bad behavior.",
+    "ISFPs are more stubborn than ENTJs.",
+    "Sensors are actually better at abstract thinking, they just don't talk about it.",
+    "Every type thinks they're the misunderstood one.",
 ]
 
-# ==================== FRIEND GROUP QUESTIONS ====================
+# ==================== SCENARIO ROLE ASSIGNMENTS ====================
+# Assign roles to the friend group based on fun scenarios
 
-FRIEND_GROUP_QUESTIONS = [
-    "Who here is most likely to become famous for something weird?",
-    "Who here is most likely to survive a zombie apocalypse?",
-    "Who here is most likely to accidentally start a cult?",
-    "Who here is most likely to win an argument they're wrong about?",
-    "Who here is most likely to get away with a crime?",
-    "Who here is most likely to become a villain in their origin story?",
-    "Who here is most likely to fake their own death for fun?",
-    "Who here is most likely to get canceled on Twitter?",
-    "Who here is most likely to randomly disappear and come back with snacks?",
-    "Who here is most likely to cry because someone else is crying?",
-    "Who here is most likely to adopt a stray cat?",
-    "Who here is most likely to have a secret nobody knows?",
-    "Who here is most likely to overthrow a government?",
-    "Who here is most likely to get kidnapped and befriend the kidnapper?",
-    "Who here is most likely to cause an international incident?",
-    "Who here is most likely to get overly invested in a random mobile game?",
-    "Who here is most likely to know random trivia about everything?",
-    "Who here is most likely to go viral for the wrong reasons?",
-    "Who here is most likely to accidentally binge watch a whole series without realizing it?",
-    "Who here is most likely to befriend someone they just met in line?",
-    "Who here is most likely to have a weirdly specific skill nobody expects?",
-    "Who here is most likely to become a supervillain?",
-    "Who here is most likely to fake being sick to skip something?",
-    "Who here is most likely to lie on their resume?",
-    "Who here is most likely to overthink a text for an hour?",
-    "Who here is most likely to drop everything for someone they just met?",
-    "Who here is most likely to have a villain arc?",
-    "Who here is most likely to manipulate someone without realizing?",
-    "Who here is most likely to start a revolution?",
-    "Who here is most likely to become a conspiracy theorist?",
-    "Who here is most likely to get caught up in drama they didn't start?",
-    "Who here is most likely to ruin a surprise party?",
-    "Who here is most likely to get lost in their own neighborhood?",
-    "Who here is most likely to bring a knife to a gunfight and win?",
-    "Who here is most likely to die first in a horror movie?",
-    "Who here is most likely to survive purely out of spite?",
-    "Who here is most likely to fake an accent for no reason?",
-    "Who here is most likely to still sleep with a stuffed animal?",
-    "Who here is most likely to run away and join the circus?",
-    "Who here is most likely to become a TikTok influencer?",
-    "Who here is most likely to ghost someone they've known for years?",
-    "Who here is most likely to write an exposé about this friend group?",
-    "Who here is most likely to sell out for brand deals?",
-    "Who here is most likely to marry rich?",
-    "Who here is most likely to become a hermit?",
-    "Who here is most likely to fake their way into a career?",
-    "Who here is most likely to start beef with a celebrity?",
-    "Who here is most likely to become internet famous overnight?",
-    "Who here is most likely to go off the grid?",
-    "Who here is most likely to accidentally commit a felony?",
-    "Who here is most likely to cry at a Pixar movie?",
-    "Who here is most likely to get banned from a public place?",
-    "Who here is most likely to start a fight over nothing?",
-    "Who here is most likely to become a cryptobro?",
-    "Who here is most likely to join a commune?",
-    "Who here is most likely to have main character syndrome?",
-    "Who here is most likely to fake being rich?",
-    "Who here is most likely to become a standup comedian?",
-    "Who here is most likely to have the most unhinged search history?",
-    "Who here is most likely to send memes at 3am?",
-    "Who here is most likely to name their plants and apologize when they die?",
-    "Who here is most likely to argue with a wall and lose?",
-    "Who here is most likely to start a podcast nobody listens to?",
-    "Who here is most likely to become a professional gambler?",
-    "Who here is most likely to get arrested for something stupid?",
-    "Who here is most likely to become a cult member?",
-    "Who here is most likely to fake an injury for attention?",
-    "Who here is most likely to start a YouTube channel and give up in a week?",
-    "Who here is most likely to talk to animals like they understand?",
-    "Who here is most likely to have an emotional support playlist for every mood?",
-    "Who here is most likely to get famous and forget about everyone?",
-    "Who here is most likely to go viral for something embarrassing?",
-    "Who here is most likely to become a politician?",
-    "Who here is most likely to trip over nothing?",
-    "Who here is most likely to remember everyone's birthday without reminders?",
-    "Who here is most likely to get emotionally attached to fictional characters?",
-    "Who here is most likely to organize their books by color instead of genre?",
-    "Who here is most likely to make up elaborate backstories for strangers they see?",
-    "Who here is most likely to get exposed in a documentary?",
-    "Who here is most likely to have a burner account?",
-    "Who here is most likely to fake their death on social media?",
-    "Who here is most likely to become a true crime podcast host?",
-    "Who here is most likely to accidentally become a meme?",
-    "Who here is most likely to get doxxed?",
-    "Who here is most likely to start drama in the group chat?",
-    "Who here is most likely to rage quit something important?",
-    "Who here is most likely to become an influencer's worst nightmare?",
-    "Who here is most likely to get into a Twitter fight with their employer?",
-    "Who here is most likely to impulse buy something ridiculous?",
-    "Who here is most likely to become a motivational speaker?",
-    "Who here is most likely to get kicked out of a Discord server?",
-    "Who here is most likely to troll someone too hard?",
-    "Who here is most likely to delete their account after one bad take?",
-    "Who here is most likely to become internet infamous?",
-    "Who here is most likely to accidentally reveal a secret?",
-    "Who here is most likely to start a rumor?",
-    "Who here is most likely to win a reality TV show?",
-    "Who here is most likely to get in trouble for arguing online?",
-    "Who here is most likely to be the subject of a true crime documentary?",
-    "Who here is most likely to fake cry to get out of trouble?",
+SCENARIO_ROLE_ASSIGNMENTS = [
+    {
+        "scenario": "Heist Movie",
+        "roles": [
+            "The Mastermind",
+            "The Muscle",
+            "The Tech Expert",
+            "The Wildcard",
+            "The One Who Accidentally Triggers the Alarm",
+        ]
+    },
+    {
+        "scenario": "Zombie Apocalypse",
+        "roles": [
+            "The Leader",
+            "The Medic",
+            "The Scout",
+            "The One Who Gets Bitten First",
+            "The One Who Survives Out of Pure Spite",
+        ]
+    },
+    {
+        "scenario": "Reality TV Show",
+        "roles": [
+            "The Winner",
+            "First Eliminated",
+            "The Villain Edit",
+            "Fan Favorite",
+            "The Chaos Agent",
+        ]
+    },
+    {
+        "scenario": "Road Trip",
+        "roles": [
+            "The Driver",
+            "The DJ",
+            "The Navigator Who Gets Everyone Lost",
+            "The Snack Manager",
+            "The One Who Falls Asleep Immediately",
+        ]
+    },
+    {
+        "scenario": "Murder Mystery Dinner",
+        "roles": [
+            "The Detective",
+            "The Victim",
+            "The Obvious Suspect",
+            "The Actual Killer",
+            "The Clueless Guest",
+        ]
+    },
+    {
+        "scenario": "Group Project",
+        "roles": [
+            "The One Who Does Everything",
+            "The Ideas Person (Who Does Nothing Else)",
+            "The One Who Shows Up the Night Before",
+            "The One Who Somehow Gets Full Credit",
+            "The One Who Disappears Completely",
+        ]
+    },
+    {
+        "scenario": "Startup Company",
+        "roles": [
+            "The Visionary CEO",
+            "The One Who Actually Runs Things",
+            "The First Hire Who Gets Pushed Out",
+            "The One Who Embezzles and Flees",
+            "The One Who Saw It Coming",
+        ]
+    },
+    {
+        "scenario": "Fantasy Adventure Party",
+        "roles": [
+            "The Paladin (Tank)",
+            "The Healer",
+            "The Rogue",
+            "The Wizard Who Keeps Casting Fireball",
+            "The Bard Who Won't Stop Flirting with NPCs",
+        ]
+    },
+    {
+        "scenario": "High School Reunion",
+        "roles": [
+            "The One Who Peaked in High School",
+            "The Glow-Up",
+            "The One Who Didn't Change At All",
+            "The One Nobody Remembers",
+            "The One Who Brought Drama",
+        ]
+    },
+    {
+        "scenario": "Escape Room",
+        "roles": [
+            "The One Who Solves Everything",
+            "The One Touching Things They Shouldn't",
+            "The One Reading Instructions Out Loud",
+            "The One Having an Existential Crisis",
+            "The One Who Just Vibes",
+        ]
+    },
+    {
+        "scenario": "Wedding Party",
+        "roles": [
+            "The Maid of Honor/Best Man",
+            "The One Who Gives the Awkward Speech",
+            "The One Who Hooks Up with Someone",
+            "The One Who Cries the Most",
+            "The One Who Catches the Bouquet",
+        ]
+    },
+    {
+        "scenario": "Cooking Competition",
+        "roles": [
+            "The One Who Actually Knows How to Cook",
+            "The One Who Sets Something on Fire",
+            "The One Making 'Deconstructed' Everything",
+            "The One Crying Over Onions",
+            "The One Who Just Orders Takeout",
+        ]
+    },
+    {
+        "scenario": "True Crime Podcast",
+        "roles": [
+            "The Host",
+            "The Researcher",
+            "The One Who Gets Too Invested",
+            "The One Who Keeps Derailing",
+            "The One Listeners Hate-Listen For",
+        ]
+    },
+    {
+        "scenario": "Haunted House",
+        "roles": [
+            "The One Who Says It's Not Real",
+            "The One Who Brought a Ouija Board",
+            "The One Who Screams At Everything",
+            "The One Who Gets Possessed",
+            "The One Who Befriends the Ghost",
+        ]
+    },
+    {
+        "scenario": "Band",
+        "roles": [
+            "Lead Singer",
+            "Guitarist Who Thinks They're the Star",
+            "Drummer Who Keeps the Whole Thing Together",
+            "Bassist Nobody Notices",
+            "The One Who Quits to Go Solo",
+        ]
+    },
+    {
+        "scenario": "Desert Island Survival",
+        "roles": [
+            "The One Who Builds Shelter",
+            "The One Who Finds Food",
+            "The One Who Becomes the Leader",
+            "The One Everyone Wants to Eat First",
+            "The One Who Gets Rescued and Doesn't Tell Anyone",
+        ]
+    },
+    {
+        "scenario": "Friend Group Sitcom",
+        "roles": [
+            "The Main Character",
+            "The Quirky One",
+            "The Voice of Reason",
+            "The One Dating Everyone",
+            "The Recurring Side Character",
+        ]
+    },
+    {
+        "scenario": "Office Drama",
+        "roles": [
+            "The Boss Who Shouldn't Be Boss",
+            "The One Who Does HR's Job",
+            "The One Starting All the Gossip",
+            "The One Who 'Works from Home'",
+            "The One Planning Their Escape",
+        ]
+    },
+    {
+        "scenario": "Space Crew",
+        "roles": [
+            "The Captain",
+            "The Engineer Who Keeps Everything Running",
+            "The Scientist Who Touches Alien Artifacts",
+            "The One Who Opens the Airlock by Accident",
+            "The Robot/AI Everyone Suspects",
+        ]
+    },
+    {
+        "scenario": "Game Night",
+        "roles": [
+            "The One Who Wins Everything",
+            "The Sore Loser",
+            "The One Who Takes Forever on Their Turn",
+            "The One Making Up Rules",
+            "The One Who Flips the Board",
+        ]
+    },
+    {
+        "scenario": "Camping Trip",
+        "roles": [
+            "The One Who Packed Everything",
+            "The One Who Forgot Their Sleeping Bag",
+            "The Fire Starter",
+            "The One Who Hears Scary Noises All Night",
+            "The One Who Wanted to Stay Home",
+        ]
+    },
+    {
+        "scenario": "Moving Day",
+        "roles": [
+            "The One Who Actually Shows Up",
+            "The One Who Lifts Nothing But Eats Everything",
+            "The One Who Organizes Too Much",
+            "The One Who Breaks Something",
+            "The One Who 'Had Something Come Up'",
+        ]
+    },
+    {
+        "scenario": "Apocalypse Bunker",
+        "roles": [
+            "The One Who Rations Resources",
+            "The One Who Tries to Leave",
+            "The One Everyone Suspects of Hiding Food",
+            "The One Who Keeps Morale Up",
+            "The One Who Snaps First",
+        ]
+    },
+    {
+        "scenario": "Courtroom Drama",
+        "roles": [
+            "The Defense Attorney",
+            "The Prosecutor",
+            "The Surprise Witness",
+            "The One Who Confesses Out of Nowhere",
+            "The Juror Who Falls Asleep",
+        ]
+    },
+    {
+        "scenario": "Podcast Team",
+        "roles": [
+            "The Main Host",
+            "The Research Nerd",
+            "The One Who Goes on Tangents",
+            "The One Who Edits Everything Out",
+            "The Guest Who Never Leaves",
+        ]
+    },
+    {
+        "scenario": "Secret Agent Team",
+        "roles": [
+            "The Handler",
+            "The Field Agent",
+            "The Double Agent",
+            "The Gadget Person",
+            "The One Who Blows Their Cover Immediately",
+        ]
+    },
+    {
+        "scenario": "Restaurant Kitchen",
+        "roles": [
+            "The Head Chef",
+            "The One Who Burns Water",
+            "The Perfectionist Who Takes Forever",
+            "The One Who Eats More Than They Cook",
+            "The One Who Quits Mid-Service",
+        ]
+    },
+    {
+        "scenario": "Group Chat",
+        "roles": [
+            "The One Who Sends 50 Messages in a Row",
+            "The Lurker",
+            "The One Who Only Reacts with Emojis",
+            "The One Who Changes the Topic",
+            "The One Who Mutes The Chat",
+        ]
+    },
+    {
+        "scenario": "College Group Project (Realistic)",
+        "roles": [
+            "The One Panicking at 11pm",
+            "The One Who Hasn't Started Their Part",
+            "The One Doing Everyone Else's Work",
+            "The One Who Disappeared After the First Meeting",
+            "The One Who Shows Up Just to Present",
+        ]
+    },
+    {
+        "scenario": "Gym Buddies",
+        "roles": [
+            "The Personal Trainer Energy",
+            "The One Who Only Does Cardio",
+            "The One Who Just Sits on Equipment",
+            "The One Taking Mirror Selfies",
+            "The One Who Cancels Every Time",
+        ]
+    },
+    {
+        "scenario": "Therapy Group",
+        "roles": [
+            "The One Who Fixes Everyone Else",
+            "The One Who Cries Every Session",
+            "The One Who Won't Share",
+            "The One Who Makes Everything About Themselves",
+            "The Therapist's Favorite",
+        ]
+    },
+    {
+        "scenario": "Bank Robbery (Hostages)",
+        "roles": [
+            "The One Who Tries to Negotiate",
+            "The One Who Makes Friends with the Robber",
+            "The One Having a Panic Attack",
+            "The One Planning an Escape",
+            "The One Who Sleeps Through It",
+        ]
+    },
+    {
+        "scenario": "Airplane Emergency",
+        "roles": [
+            "The Pilot Who Keeps Everyone Calm",
+            "The Flight Attendant Who Panics",
+            "The One Praying Loudly",
+            "The One Who Finished Their Drink First",
+            "The One Writing a Goodbye Note",
+        ]
+    },
+    {
+        "scenario": "Reality Dating Show",
+        "roles": [
+            "The One Everyone Wants",
+            "The One Who Gets Friend-Zoned",
+            "The One There for the Wrong Reasons",
+            "The One Who Cries in Every Confessional",
+            "The One Who Starts Drama for Screen Time",
+        ]
+    },
+    {
+        "scenario": "Neighborhood Watch",
+        "roles": [
+            "The One Who Takes It Way Too Seriously",
+            "The One Who Reports Everything",
+            "The One Who Never Shows Up",
+            "The One Suspected of Being the Problem",
+            "The One Who Just Wanted Snacks",
+        ]
+    },
+    {
+        "scenario": "Karaoke Night",
+        "roles": [
+            "The One Who Sings Every Song",
+            "The One Who Only Sings Sad Songs",
+            "The One Who Refuses to Sing",
+            "The One Who's Actually Good",
+            "The One Who Gets Too Emotional",
+        ]
+    },
+    {
+        "scenario": "Funeral",
+        "roles": [
+            "The One Who Gives the Eulogy",
+            "The One Who Ugly Cries",
+            "The One Who Shows Up Late",
+            "The One Who Makes It Awkward",
+            "The One Reading the Will",
+        ]
+    },
+    {
+        "scenario": "Book Club",
+        "roles": [
+            "The One Who Actually Read It",
+            "The One Who Skimmed the Wikipedia",
+            "The One Who Brings the Wine",
+            "The One Who Hates Every Book",
+            "The One Who Spoils the Ending",
+        ]
+    },
+    {
+        "scenario": "Jury Duty",
+        "roles": [
+            "The One Who Takes Notes",
+            "The One Who's Already Decided",
+            "The One Who Just Wants to Go Home",
+            "The One Asking Too Many Questions",
+            "The One Who Holds Out and Causes a Mistrial",
+        ]
+    },
+    {
+        "scenario": "Talent Show",
+        "roles": [
+            "The One With Actual Talent",
+            "The One Who Thinks They Have Talent",
+            "The One Doing Something Weird",
+            "The Supportive Friend in the Audience",
+            "The One Who Forgets Their Act",
+        ]
+    },
+    {
+        "scenario": "Las Vegas Trip",
+        "roles": [
+            "The One Who Wins Big",
+            "The One Who Loses Everything",
+            "The One Who Gets Married",
+            "The One Who Disappears for 12 Hours",
+            "The One on Damage Control",
+        ]
+    },
+    {
+        "scenario": "Garage Sale",
+        "roles": [
+            "The One Selling Everything",
+            "The One Who Prices Things Too High",
+            "The One Haggling Over $1",
+            "The One Buying Their Own Stuff Back",
+            "The One Who Just Wants Coffee",
+        ]
+    },
+    {
+        "scenario": "Music Festival",
+        "roles": [
+            "The One Who Loses Everyone",
+            "The One Who Knows Every Song",
+            "The One Who Complains the Whole Time",
+            "The One at the First Aid Tent",
+            "The One Who Made It Their Whole Personality",
+        ]
+    },
+    {
+        "scenario": "Family Dinner",
+        "roles": [
+            "The One Who Started the Argument",
+            "The One Trying to Keep the Peace",
+            "The One Eating in Silence",
+            "The One Who Left Early",
+            "The One Who Brought Up Politics",
+        ]
+    },
+    {
+        "scenario": "Airport Delay",
+        "roles": [
+            "The One Who Complains to Staff",
+            "The One Who Made Friends with Strangers",
+            "The One Who's Been Asleep for Hours",
+            "The One Stress-Eating",
+            "The One Rebooking Everyone's Flights",
+        ]
+    },
+    {
+        "scenario": "Intervention",
+        "roles": [
+            "The One Reading the Letter",
+            "The One Who Cries More Than the Subject",
+            "The One Who's Secretly Judging",
+            "The One Who Wasn't Supposed to Be There",
+            "The One Being Intervened",
+        ]
+    },
+    {
+        "scenario": "Trivia Night",
+        "roles": [
+            "The One Who Carries the Team",
+            "The One Confident About Wrong Answers",
+            "The One Who Only Knows Pop Culture",
+            "The One Arguing with the Host",
+            "The One Who Came for the Drinks",
+        ]
+    },
+    {
+        "scenario": "Haunted Airbnb",
+        "roles": [
+            "The One Who Booked It",
+            "The One Who Refuses to Sleep",
+            "The One Documenting Everything",
+            "The One Talking to the Ghost",
+            "The One Who Didn't Notice Anything",
+        ]
+    },
+    {
+        "scenario": "Surprise Party Planning",
+        "roles": [
+            "The Organizer",
+            "The One Who Almost Ruins It",
+            "The One Handling Decorations",
+            "The One Distracting the Guest of Honor",
+            "The One Who Forgot the Date",
+        ]
+    },
+    {
+        "scenario": "Gym Class",
+        "roles": [
+            "The One Taking It Too Seriously",
+            "The One Faking an Injury",
+            "The One Picked Last",
+            "The Coach's Favorite",
+            "The One Who Forgot Their Clothes",
+        ]
+    },
+    {
+        "scenario": "Caper Gone Wrong",
+        "roles": [
+            "The One Who Planned Everything",
+            "The One Who Forgot the Plan",
+            "The One Who Got Caught",
+            "The One Who Escaped",
+            "The One Who Caused It to Go Wrong",
+        ]
+    },
+    {
+        "scenario": "Movie Night",
+        "roles": [
+            "The One Who Picks the Movie",
+            "The One Who Falls Asleep",
+            "The One Commenting the Whole Time",
+            "The One on Their Phone",
+            "The One Eating All the Snacks",
+        ]
+    },
+    {
+        "scenario": "Black Friday Shopping",
+        "roles": [
+            "The One With a Strategy",
+            "The One Who Gets Trampled",
+            "The One Fighting Over the Last Item",
+            "The One Waiting in the Car",
+            "The One Who Bought Nothing",
+        ]
+    },
+    {
+        "scenario": "Beach Day",
+        "roles": [
+            "The One Who Gets Sunburned",
+            "The One Building a Sand Castle",
+            "The One Who Won't Go in the Water",
+            "The One Who Loses Their Phone in the Sand",
+            "The One Asleep Under the Umbrella",
+        ]
+    },
+    {
+        "scenario": "Ski Trip",
+        "roles": [
+            "The One Who's Actually Good",
+            "The One on the Bunny Slope All Day",
+            "The One Who Gets Hurt First",
+            "The One at the Lodge the Whole Time",
+            "The One Who Lost a Ski",
+        ]
+    },
+    {
+        "scenario": "Improv Class",
+        "roles": [
+            "The Natural",
+            "The One Who Freezes",
+            "The One Who Says 'No' to Everything",
+            "The One Making It Weird",
+            "The One Who Thinks They're Funnier Than They Are",
+        ]
+    },
+    {
+        "scenario": "Power Outage",
+        "roles": [
+            "The One Who Has Flashlights Ready",
+            "The One Panicking",
+            "The One Telling Ghost Stories",
+            "The One Whose Phone Died",
+            "The One Who Goes to Sleep",
+        ]
+    },
+    {
+        "scenario": "Job Interview Day",
+        "roles": [
+            "The One Who Nailed It",
+            "The One Who Bombed It",
+            "The One Who Was Overdressed",
+            "The One Who Got Lost Finding the Office",
+            "The One Who Got the Interviewer's Name Wrong",
+        ]
+    },
+    {
+        "scenario": "Wine Tasting",
+        "roles": [
+            "The Sommelier Wannabe",
+            "The One Who's Just Here to Drink",
+            "The Designated Driver",
+            "The One Taking It Too Seriously",
+            "The One Who's Already Drunk",
+        ]
+    },
+    {
+        "scenario": "Marathon",
+        "roles": [
+            "The One Who Trained for Months",
+            "The One Who Signed Up as a Joke",
+            "The One Giving Up at Mile 3",
+            "The One Getting Carried Across the Finish Line",
+            "The One Handing Out Water",
+        ]
+    },
+    {
+        "scenario": "Parent-Teacher Conference",
+        "roles": [
+            "The Strict Parent",
+            "The Chill Parent",
+            "The Parent Who Blames the Teacher",
+            "The Parent Making Excuses",
+            "The Teacher Who's Over It",
+        ]
+    },
+    {
+        "scenario": "Fire Drill",
+        "roles": [
+            "The One Who Takes Charge",
+            "The One Who Panics",
+            "The One Who Thinks It's Real",
+            "The One Who Stayed Behind",
+            "The One Timing How Long It Takes",
+        ]
+    },
+    {
+        "scenario": "Alien First Contact",
+        "roles": [
+            "The Diplomat",
+            "The One Who Runs",
+            "The One Trying to Take a Selfie",
+            "The One Who Already Knew",
+            "The One Offering Them Food",
+        ]
+    },
+    {
+        "scenario": "Apartment Hunt",
+        "roles": [
+            "The One With Unrealistic Standards",
+            "The One Who'll Take Anything",
+            "The One Asking About Vibes",
+            "The One Reading Every Lease Detail",
+            "The One Who Found Mold",
+        ]
+    },
+    {
+        "scenario": "DIY Project",
+        "roles": [
+            "The One Who Read the Instructions",
+            "The One Who Didn't Read the Instructions",
+            "The One Holding the Flashlight",
+            "The One Who Went to Get Food",
+            "The One Who Made It Worse",
+        ]
+    },
+    {
+        "scenario": "Speed Dating",
+        "roles": [
+            "The One Who Actually Tried",
+            "The One Who Ran Out of Topics",
+            "The One Who's Too Intense",
+            "The One Who Left Early",
+            "The One Getting All the Numbers",
+        ]
+    },
+    {
+        "scenario": "Protest March",
+        "roles": [
+            "The One Leading Chants",
+            "The One Holding the Sign",
+            "The One Who Got Lost in the Crowd",
+            "The One Live-Streaming Everything",
+            "The One Passing Out Snacks",
+        ]
+    },
+    {
+        "scenario": "Sinking Ship",
+        "roles": [
+            "The One Organizing Lifeboats",
+            "The One Who Panics",
+            "The One Playing Music to the End",
+            "The One Going Back for Their Stuff",
+            "The One With a Secret Life Vest",
+        ]
+    },
+    {
+        "scenario": "Midnight Diner",
+        "roles": [
+            "The Regular Who Knows Everyone",
+            "The One Eating Their Feelings",
+            "The One Who Just Got Off Work",
+            "The One Who's Oversharing to the Waitstaff",
+            "The One Who Came for Coffee Only",
+        ]
+    },
+    {
+        "scenario": "Dog Park",
+        "roles": [
+            "The One Whose Dog Behaves",
+            "The One Apologizing Constantly",
+            "The One Without a Dog (Just Watching)",
+            "The One Giving Training Advice",
+            "The One Whose Dog Started Drama",
+        ]
+    },
+    {
+        "scenario": "Gym Locker Room",
+        "roles": [
+            "The One Who Takes Forever",
+            "The One Walking Around Naked",
+            "The One in and Out in 2 Minutes",
+            "The One Having Full Conversations",
+            "The One Who Forgot Their Lock",
+        ]
+    },
+    {
+        "scenario": "Retirement Home Visit",
+        "roles": [
+            "The One Who Connects Deeply",
+            "The One Checking Their Phone",
+            "The One Who Brought Cookies",
+            "The One Asking Uncomfortable Questions",
+            "The One Who Cried on the Way Home",
+        ]
+    },
+    {
+        "scenario": "Baby Shower",
+        "roles": [
+            "The Planner",
+            "The One Who Drank Too Much Punch",
+            "The One Giving Unsolicited Advice",
+            "The One Who Doesn't Want Kids",
+            "The One Who Got the Best Gift",
+        ]
+    },
+    {
+        "scenario": "Snowstorm",
+        "roles": [
+            "The One Who Stocked Up on Supplies",
+            "The One Who Has to Go Outside",
+            "The One Who Loses Power",
+            "The One Who's Vibing by the Fire",
+            "The One Who's Complaining the Whole Time",
+        ]
+    },
+    {
+        "scenario": "Food Truck Rally",
+        "roles": [
+            "The One Who Tries Everything",
+            "The One Who Can't Decide",
+            "The One With Food Allergies",
+            "The One Saving Tables",
+            "The One Documenting It All for Instagram",
+        ]
+    },
+    {
+        "scenario": "Escape the Simulation",
+        "roles": [
+            "The One Who Figured It Out",
+            "The One Who Refuses to Believe",
+            "The One Who Wants to Stay",
+            "The One Exploiting the Glitches",
+            "The NPC Who Became Self-Aware",
+        ]
+    },
+    {
+        "scenario": "Influencer Meetup",
+        "roles": [
+            "The One With the Most Followers",
+            "The One Trying Too Hard",
+            "The One There for Free Stuff",
+            "The One Having a Mental Breakdown",
+            "The One Networking Aggressively",
+        ]
+    },
+    {
+        "scenario": "Divorce Proceedings",
+        "roles": [
+            "The One Who Saw It Coming",
+            "The One Who Didn't See It Coming",
+            "The Messy Lawyer",
+            "The One Fighting Over the Dog",
+            "The One Writing Everything Down",
+        ]
+    },
+    {
+        "scenario": "Haunted Ship",
+        "roles": [
+            "The Captain Going Down with It",
+            "The One Who Saw the Ghost First",
+            "The One Who Thinks It's Maritime Law Issues",
+            "The One in the Crow's Nest",
+            "The One Who Angered the Spirit",
+        ]
+    },
+    {
+        "scenario": "Discord Server Mod Team",
+        "roles": [
+            "The Power Moderator",
+            "The One Who Never Checks Their Pings",
+            "The One Who Bans Too Fast",
+            "The One Writing Rules Nobody Reads",
+            "The One Who Drama-Stirred and Got Promoted",
+        ]
+    },
+    {
+        "scenario": "Garage Band Practice",
+        "roles": [
+            "The One Who Owns the Space",
+            "The One Who's Actually Talented",
+            "The One Always Late",
+            "The One Suggesting Covers",
+            "The One Who Quit Last Week But Showed Up",
+        ]
+    },
+    {
+        "scenario": "Family Photo",
+        "roles": [
+            "The One Who Orchestrates Everything",
+            "The One Not Looking at the Camera",
+            "The One With Fake Smiling",
+            "The One Who Blinked Every Time",
+            "The One Who Left Too Early",
+        ]
+    },
+    {
+        "scenario": "Neighborhood Potluck",
+        "roles": [
+            "The One Who Brought Store-Bought",
+            "The One Who Made Way Too Much",
+            "The One Taking All the Credit",
+            "The One Guarding Their Recipe",
+            "The One Who Ate Before Coming",
+        ]
+    },
+    {
+        "scenario": "New Year's Eve",
+        "roles": [
+            "The One Counting Down Too Early",
+            "The One Asleep by 11",
+            "The One Who Kisses Everyone",
+            "The One Who's Too Emotional",
+            "The One Planning Next Year's Resolutions Already",
+        ]
+    },
+    {
+        "scenario": "First Day at New Job",
+        "roles": [
+            "The One Over-Preparing",
+            "The One Who's Already Buddy-Buddy with Everyone",
+            "The One Lost in the Building",
+            "The One Forgotten by HR",
+            "The One Asking Too Fast When's Lunch",
+        ]
+    },
+    {
+        "scenario": "Amusement Park",
+        "roles": [
+            "The One Who Rides Everything",
+            "The One Holding Everyone's Stuff",
+            "The One Who Got Sick",
+            "The One Winning at Games",
+            "The One Who Just Wants Funnel Cake",
+        ]
+    },
+    {
+        "scenario": "Art Museum",
+        "roles": [
+            "The One Pretending to Understand",
+            "The One Taking Photos of Everything",
+            "The One Sitting on Every Bench",
+            "The One at the Gift Shop",
+            "The One Who Actually Gets It",
+        ]
+    },
+    {
+        "scenario": "Condo Board Meeting",
+        "roles": [
+            "The One With Petty Complaints",
+            "The Reasonable One Nobody Listens To",
+            "The One Recording Everything",
+            "The One Causing All the Problems",
+            "The One Who Wants to Talk About Parking Again",
+        ]
+    },
+    {
+        "scenario": "Cross-Country Move",
+        "roles": [
+            "The One Driving the Truck",
+            "The One Who Packed Nothing",
+            "The One Managing Logistics",
+            "The One Crying Over Leaving",
+            "The One Already Scouting Restaurants in the New City",
+        ]
+    },
+    {
+        "scenario": "Comic-Con",
+        "roles": [
+            "The One in Full Cosplay",
+            "The One Waiting in Every Line",
+            "The One Who Got the Autograph",
+            "The One Who Spent Too Much",
+            "The One Who Got Recognized",
+        ]
+    },
+    {
+        "scenario": "Spelunking Expedition",
+        "roles": [
+            "The Guide",
+            "The One Getting Stuck",
+            "The One With Claustrophobia",
+            "The One Taking Samples",
+            "The One Whose Light Went Out",
+        ]
+    },
+    {
+        "scenario": "International Layover",
+        "roles": [
+            "The One Who Found the Lounge",
+            "The One Exploring the Airport",
+            "The One Who Missed the Connection",
+            "The One Sleeping Anywhere",
+            "The One Buying Duty-Free",
+        ]
+    },
+    {
+        "scenario": "Building IKEA Furniture",
+        "roles": [
+            "The One Reading Directions",
+            "The One Ignoring Directions",
+            "The One Holding the Parts",
+            "The One Who's Done Already",
+            "The One Missing a Screw at the End",
+        ]
+    },
+    {
+        "scenario": "Podcast Recording",
+        "roles": [
+            "The Host",
+            "The One Who Talks Too Close to the Mic",
+            "The One Who Goes Off Script",
+            "The One Editing Out the Mistakes",
+            "The One With Strong Opinions",
+        ]
+    },
+    {
+        "scenario": "Alien Abduction",
+        "roles": [
+            "The One Asking Questions",
+            "The One Panicking",
+            "The One Making Friends with the Aliens",
+            "The One Trying to Fight",
+            "The One Who's Been Here Before",
+        ]
+    },
+    {
+        "scenario": "Late-Night Study Session",
+        "roles": [
+            "The One Who's Actually Studying",
+            "The One Procrastinating",
+            "The One Bringing Snacks",
+            "The One Already Asleep",
+            "The One Having a Breakdown",
+        ]
+    },
+    {
+        "scenario": "Thrift Store",
+        "roles": [
+            "The One Finding Designer Pieces",
+            "The One Judging Everything",
+            "The One Buying Too Much",
+            "The One in the Dressing Room Forever",
+            "The One Who Found Something Cursed",
+        ]
+    },
+    {
+        "scenario": "House Party Cleanup",
+        "roles": [
+            "The One Who Stayed to Help",
+            "The One Who Disappeared",
+            "The One Eating Leftovers",
+            "The One Finding Weird Things",
+            "The One Complaining the Whole Time",
+        ]
+    },
+    {
+        "scenario": "Escape Room (High Stakes)",
+        "roles": [
+            "The One Taking Control",
+            "The One Panicking About Time",
+            "The One Solving Everything Quietly",
+            "The One Touching Random Things",
+            "The One Who Gave Up Early",
+        ]
+    },
+    {
+        "scenario": "Pet Store Visit",
+        "roles": [
+            "The One Who Wants Everything",
+            "The Voice of Reason",
+            "The One Talking to the Animals",
+            "The One Who Almost Bought a Snake",
+            "The One Taking Photos for Instagram",
+        ]
+    },
 ]
 
 # ==================== SPARK WOULD YOU RATHER (WYR) ====================
