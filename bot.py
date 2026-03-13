@@ -1130,7 +1130,7 @@ async def auto_start_word_game(gid: str) -> bool:
 
 # ---------- Public ----------
 
-BOT_VERSION = "v2.0.7"
+BOT_VERSION = "v2.1.0"
 
 
 @bot.tree.command(name="version", description="Check bot version (debug)")
@@ -1626,15 +1626,26 @@ def evaluate_poker_hand(cards: list[tuple[str, str]]) -> tuple[str, str, int]:
 
 def poker_cards_display(cards: list[tuple[str, str]], held: list[bool] = None) -> str:
     """Display poker cards with optional HOLD indicators."""
-    lines = []
-    card_strs = [f"`[{c[0]}{c[1]}]`" for c in cards]
-    lines.append("  ".join(card_strs))
+    # Use code block for perfect alignment
+    # Each card slot is 6 chars wide: [10♠] is 5 + 1 space
+    card_row = ""
+    hold_row = ""
     
-    if held:
-        hold_strs = ["HOLD" if h else "    " for h in held]
-        lines.append("   " + "      ".join(hold_strs))
+    for i, c in enumerate(cards):
+        card = f"[{c[0]}{c[1]}]"
+        # Pad each card to 6 chars (5 for card + 1 space)
+        card_row += card.ljust(6)
+        
+        if held:
+            if held[i]:
+                hold_row += "HOLD  "  # 4 + 2 spaces = 6
+            else:
+                hold_row += "      "  # 6 spaces
     
-    return "\n".join(lines)
+    if held and any(held):
+        return f"```\n{card_row.rstrip()}\n{hold_row.rstrip()}\n```"
+    else:
+        return f"```\n{card_row.rstrip()}\n```"
 
 
 def poker_paytable() -> str:
