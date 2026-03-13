@@ -1490,7 +1490,7 @@ class HigherLowerView(discord.ui.View):
                         f"**Previous:** {card_str(current)} → **Next:** {card_str(next_card)}\n\n"
                         f"The card was **{result}**. You guessed **{guess}**.\n\n"
                         f"Streak: **{game['streak']}** • Multiplier: **{multiplier:.1f}x**\n"
-                        f"💸 You lost **{fmt_num(loss)}** {emoji}" + (f" (kept {fmt_num(refund)})" if refund > 0 else "") + "\n"
+                        f"💸 You lost **{fmt_num(loss)}** {emoji}\n"
                         f"Balance: **{fmt_num(new_balance)}** {emoji}\n"
                         f"(Reach streak 4+ to keep your winnings!)"
                     ),
