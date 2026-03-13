@@ -1130,7 +1130,7 @@ async def auto_start_word_game(gid: str) -> bool:
 
 # ---------- Public ----------
 
-BOT_VERSION = "v2.1.0"
+BOT_VERSION = "v2.2.0"
 
 
 @bot.tree.command(name="version", description="Check bot version (debug)")
@@ -1334,6 +1334,8 @@ class BetModal(discord.ui.Modal, title="Place Your Bet!"):
             await start_higher_lower(interaction, bet)
         elif self.game_type == "video_poker":
             await start_video_poker(interaction, bet)
+        elif self.game_type == "shut_the_box":
+            await start_shut_the_box(interaction, bet)
 
 
 async def start_higher_lower(interaction: discord.Interaction, bet: int, use_followup: bool = False):
@@ -1405,6 +1407,8 @@ class PlayAgainView(discord.ui.View):
         
         if self.game_type == "video_poker":
             await start_video_poker(interaction, self.bet, use_followup=True)
+        elif self.game_type == "shut_the_box":
+            await start_shut_the_box(interaction, self.bet, use_followup=True)
         else:
             await start_higher_lower(interaction, self.bet, use_followup=True)
     
@@ -1828,12 +1832,383 @@ class VideoPokerHoldView(discord.ui.View):
         await interaction.response.edit_message(embed=embed, view=PlayAgainView(game["bet"], "video_poker"))
 
 
+# ======================== SHUT THE BOX ========================
+
+SHUT_THE_BOX_PAYOUT = 10  # 10x bet for winning
+
+
+def stb_roll_dice(num_dice: int = 2) -> tuple[int, list[int]]:
+    """Roll dice and return (total, [individual rolls])."""
+    rolls = [random.randint(1, 6) for _ in range(num_dice)]
+    return sum(rolls), rolls
+
+
+def stb_get_valid_combinations(tiles: list[int], target: int) -> list[list[int]]:
+    """Find all valid combinations of tiles that sum to target."""
+    valid = []
+    # Check singles
+    for tile in tiles:
+        if tile == target:
+            valid.append([tile])
+    # Check pairs
+    for i, t1 in enumerate(tiles):
+        for t2 in tiles[i+1:]:
+            if t1 + t2 == target:
+                valid.append([t1, t2])
+    # Check triples
+    for i, t1 in enumerate(tiles):
+        for j, t2 in enumerate(tiles[i+1:], i+1):
+            for t3 in tiles[j+1:]:
+                if t1 + t2 + t3 == target:
+                    valid.append([t1, t2, t3])
+    # Check quadruples
+    for i, t1 in enumerate(tiles):
+        for j, t2 in enumerate(tiles[i+1:], i+1):
+            for k, t3 in enumerate(tiles[j+1:], j+1):
+                for t4 in tiles[k+1:]:
+                    if t1 + t2 + t3 + t4 == target:
+                        valid.append([t1, t2, t3, t4])
+    return valid
+
+
+def stb_tiles_display(tiles: list[int], selected: list[int] = None) -> str:
+    """Display tiles in a visual format. Selected tiles shown differently."""
+    if selected is None:
+        selected = []
+    
+    line = ""
+    for i in range(1, 10):
+        if i in tiles:
+            if i in selected:
+                line += f"**[{i}]** "  # Bold for selected
+            else:
+                line += f"`[{i}]` "
+        else:
+            line += "`[X]` "  # Shut tile
+    return line.strip()
+
+
+async def start_shut_the_box(interaction: discord.Interaction, bet: int, use_followup: bool = False):
+    """Start a new Shut the Box game."""
+    gid, uid = str(interaction.guild_id), str(interaction.user.id)
+    emoji = config.CHIPS["emoji"]
+    
+    # Initial state: all tiles 1-9 open, need to roll
+    _active_games[(gid, uid)] = {
+        "type": "shut_the_box",
+        "tiles": list(range(1, 10)),
+        "bet": bet,
+        "phase": "roll",  # "roll" or "select"
+        "dice_total": 0,
+        "dice_rolls": [],
+        "selected": [],
+        "combinations": [],
+    }
+    
+    embed = discord.Embed(
+        title="🎲 Shut the Box",
+        description=(
+            f"**Tiles:**\n{stb_tiles_display(list(range(1, 10)))}\n\n"
+            f"Shut all tiles to win **{SHUT_THE_BOX_PAYOUT}x** your bet!\n\n"
+            f"Press **Roll Dice** to begin."
+        ),
+        color=0xe67e22
+    )
+    embed.set_footer(text=f"Bet: {fmt_num(bet)} {emoji} • Win: {fmt_num(bet * SHUT_THE_BOX_PAYOUT)} {emoji}")
+    
+    view = ShutTheBoxView()
+    if use_followup:
+        await interaction.followup.send(embed=embed, view=view)
+    else:
+        await interaction.response.send_message(embed=embed, view=view)
+
+
+class ShutTheBoxView(discord.ui.View):
+    """View for Shut the Box game."""
+    
+    def __init__(self):
+        super().__init__(timeout=180)
+    
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        gid, uid = str(interaction.guild_id), str(interaction.user.id)
+        game = _active_games.get((gid, uid))
+        if not game or game.get("type") != "shut_the_box":
+            await interaction.response.send_message("❌ This isn't your game!", ephemeral=True)
+            return False
+        return True
+    
+    def update_tile_buttons(self, game: dict):
+        """Update tile button states based on game state."""
+        tiles = game["tiles"]
+        selected = game["selected"]
+        phase = game["phase"]
+        combinations = game["combinations"]
+        
+        # Get all tiles that appear in at least one valid combination
+        valid_tiles = set()
+        for combo in combinations:
+            valid_tiles.update(combo)
+        
+        for item in self.children:
+            if hasattr(item, "custom_id") and item.custom_id and item.custom_id.startswith("tile_"):
+                tile_num = int(item.custom_id.split("_")[1])
+                if tile_num not in tiles:
+                    # Already shut
+                    item.style = discord.ButtonStyle.secondary
+                    item.label = "X"
+                    item.disabled = True
+                elif phase == "roll":
+                    # Waiting for roll
+                    item.style = discord.ButtonStyle.secondary
+                    item.label = str(tile_num)
+                    item.disabled = True
+                elif tile_num in selected:
+                    # Currently selected
+                    item.style = discord.ButtonStyle.success
+                    item.label = f"{tile_num}✓"
+                    item.disabled = False
+                elif tile_num in valid_tiles:
+                    # Valid to select
+                    item.style = discord.ButtonStyle.primary
+                    item.label = str(tile_num)
+                    item.disabled = False
+                else:
+                    # Not in any valid combo
+                    item.style = discord.ButtonStyle.secondary
+                    item.label = str(tile_num)
+                    item.disabled = True
+    
+    # Tile buttons (row 0)
+    @discord.ui.button(label="1", style=discord.ButtonStyle.secondary, custom_id="tile_1", disabled=True, row=0)
+    async def tile1(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.toggle_tile(interaction, 1)
+    
+    @discord.ui.button(label="2", style=discord.ButtonStyle.secondary, custom_id="tile_2", disabled=True, row=0)
+    async def tile2(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.toggle_tile(interaction, 2)
+    
+    @discord.ui.button(label="3", style=discord.ButtonStyle.secondary, custom_id="tile_3", disabled=True, row=0)
+    async def tile3(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.toggle_tile(interaction, 3)
+    
+    @discord.ui.button(label="4", style=discord.ButtonStyle.secondary, custom_id="tile_4", disabled=True, row=0)
+    async def tile4(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.toggle_tile(interaction, 4)
+    
+    @discord.ui.button(label="5", style=discord.ButtonStyle.secondary, custom_id="tile_5", disabled=True, row=0)
+    async def tile5(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.toggle_tile(interaction, 5)
+    
+    # More tile buttons (row 1)
+    @discord.ui.button(label="6", style=discord.ButtonStyle.secondary, custom_id="tile_6", disabled=True, row=1)
+    async def tile6(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.toggle_tile(interaction, 6)
+    
+    @discord.ui.button(label="7", style=discord.ButtonStyle.secondary, custom_id="tile_7", disabled=True, row=1)
+    async def tile7(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.toggle_tile(interaction, 7)
+    
+    @discord.ui.button(label="8", style=discord.ButtonStyle.secondary, custom_id="tile_8", disabled=True, row=1)
+    async def tile8(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.toggle_tile(interaction, 8)
+    
+    @discord.ui.button(label="9", style=discord.ButtonStyle.secondary, custom_id="tile_9", disabled=True, row=1)
+    async def tile9(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.toggle_tile(interaction, 9)
+    
+    async def toggle_tile(self, interaction: discord.Interaction, tile: int):
+        gid, uid = str(interaction.guild_id), str(interaction.user.id)
+        game = _active_games.get((gid, uid))
+        emoji = config.CHIPS["emoji"]
+        
+        if game["phase"] != "select":
+            return
+        
+        if tile in game["selected"]:
+            game["selected"].remove(tile)
+        else:
+            game["selected"].append(tile)
+        
+        # Check if selection sums to dice total
+        selected_sum = sum(game["selected"])
+        dice_total = game["dice_total"]
+        
+        self.update_tile_buttons(game)
+        
+        embed = discord.Embed(
+            title="🎲 Shut the Box",
+            description=(
+                f"**Tiles:**\n{stb_tiles_display(game['tiles'], game['selected'])}\n\n"
+                f"🎲 Rolled: **{game['dice_rolls']}** = **{dice_total}**\n\n"
+                f"Select tiles that sum to **{dice_total}**\n"
+                f"Selected: **{game['selected']}** = **{selected_sum}**"
+            ),
+            color=0xe67e22
+        )
+        embed.set_footer(text=f"Bet: {fmt_num(game['bet'])} {emoji}")
+        
+        # Enable/disable confirm button based on valid selection
+        for item in self.children:
+            if hasattr(item, "custom_id") and item.custom_id == "confirm_shut":
+                item.disabled = selected_sum != dice_total
+        
+        await interaction.response.edit_message(embed=embed, view=self)
+    
+    @discord.ui.button(label="🎲 Roll Dice", style=discord.ButtonStyle.success, custom_id="roll_dice", row=2)
+    async def roll_dice_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        gid, uid = str(interaction.guild_id), str(interaction.user.id)
+        game = _active_games.get((gid, uid))
+        emoji = config.CHIPS["emoji"]
+        
+        if game["phase"] != "roll":
+            await interaction.response.send_message("❌ You need to select tiles first!", ephemeral=True)
+            return
+        
+        # Roll 1 die if remaining sum <= 6, else 2 dice
+        remaining_sum = sum(game["tiles"])
+        num_dice = 1 if remaining_sum <= 6 else 2
+        dice_total, dice_rolls = stb_roll_dice(num_dice)
+        
+        game["dice_total"] = dice_total
+        game["dice_rolls"] = dice_rolls
+        game["selected"] = []
+        
+        # Find valid combinations
+        combinations = stb_get_valid_combinations(game["tiles"], dice_total)
+        game["combinations"] = combinations
+        
+        if not combinations:
+            # No valid moves - GAME OVER
+            del _active_games[(gid, uid)]
+            new_balance = await db.get_balance(gid, uid)
+            
+            dice_str = f"[{dice_rolls[0]}]" if num_dice == 1 else f"[{dice_rolls[0]}] [{dice_rolls[1]}]"
+            
+            embed = discord.Embed(
+                title="🎲 Shut the Box — Game Over ✗",
+                description=(
+                    f"**Tiles:**\n{stb_tiles_display(game['tiles'])}\n\n"
+                    f"🎲 Rolled: **{dice_str}** = **{dice_total}**\n\n"
+                    f"❌ No valid moves! You can't make **{dice_total}** with remaining tiles.\n\n"
+                    f"💸 You lost **{fmt_num(game['bet'])}** {emoji}\n"
+                    f"Balance: **{fmt_num(new_balance)}** {emoji}"
+                ),
+                color=0xe74c3c
+            )
+            
+            await interaction.response.edit_message(embed=embed, view=PlayAgainView(game["bet"], "shut_the_box"))
+            return
+        
+        # Move to select phase
+        game["phase"] = "select"
+        
+        # Update buttons
+        self.update_tile_buttons(game)
+        button.disabled = True  # Disable roll button
+        
+        # Enable confirm button (but disabled until valid selection)
+        for item in self.children:
+            if hasattr(item, "custom_id") and item.custom_id == "confirm_shut":
+                item.disabled = True
+                item.style = discord.ButtonStyle.primary
+        
+        dice_str = f"[{dice_rolls[0]}]" if num_dice == 1 else f"[{dice_rolls[0]}] [{dice_rolls[1]}]"
+        
+        embed = discord.Embed(
+            title="🎲 Shut the Box",
+            description=(
+                f"**Tiles:**\n{stb_tiles_display(game['tiles'])}\n\n"
+                f"🎲 Rolled: **{dice_str}** = **{dice_total}**\n\n"
+                f"Select tiles that sum to **{dice_total}**\n"
+                f"Selected: **[]** = **0**"
+            ),
+            color=0xe67e22
+        )
+        embed.set_footer(text=f"Bet: {fmt_num(game['bet'])} {emoji}")
+        
+        await interaction.response.edit_message(embed=embed, view=self)
+    
+    @discord.ui.button(label="✓ Shut Tiles", style=discord.ButtonStyle.secondary, custom_id="confirm_shut", disabled=True, row=2)
+    async def confirm_shut_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        gid, uid = str(interaction.guild_id), str(interaction.user.id)
+        game = _active_games.get((gid, uid))
+        emoji = config.CHIPS["emoji"]
+        
+        if game["phase"] != "select":
+            return
+        
+        # Verify selection sums to dice total
+        if sum(game["selected"]) != game["dice_total"]:
+            await interaction.response.send_message("❌ Selection must sum to dice roll!", ephemeral=True)
+            return
+        
+        # Shut the selected tiles
+        for tile in game["selected"]:
+            game["tiles"].remove(tile)
+        
+        shut_tiles = game["selected"].copy()
+        game["selected"] = []
+        game["combinations"] = []
+        
+        # Check if all tiles shut = WIN!
+        if not game["tiles"]:
+            del _active_games[(gid, uid)]
+            winnings = game["bet"] * SHUT_THE_BOX_PAYOUT
+            await db.add_chips(gid, uid, interaction.user.display_name, winnings)
+            new_balance = await db.get_balance(gid, uid)
+            profit = winnings - game["bet"]
+            
+            embed = discord.Embed(
+                title="🎲 Shut the Box — YOU WIN! 🎉",
+                description=(
+                    f"**Tiles:**\n{stb_tiles_display([])}\n\n"
+                    f"🏆 **SHUT THE BOX!** All tiles closed!\n\n"
+                    f"💰 You won **{fmt_num(winnings)}** {emoji} (+{fmt_num(profit)} profit)\n"
+                    f"Balance: **{fmt_num(new_balance)}** {emoji}"
+                ),
+                color=0x2ecc71
+            )
+            
+            await interaction.response.edit_message(embed=embed, view=PlayAgainView(game["bet"], "shut_the_box"))
+            return
+        
+        # Back to roll phase
+        game["phase"] = "roll"
+        game["dice_total"] = 0
+        game["dice_rolls"] = []
+        
+        # Update buttons
+        self.update_tile_buttons(game)
+        
+        # Re-enable roll button, disable confirm
+        for item in self.children:
+            if hasattr(item, "custom_id") and item.custom_id == "roll_dice":
+                item.disabled = False
+            if hasattr(item, "custom_id") and item.custom_id == "confirm_shut":
+                item.disabled = True
+                item.style = discord.ButtonStyle.secondary
+        
+        embed = discord.Embed(
+            title="🎲 Shut the Box",
+            description=(
+                f"**Tiles:**\n{stb_tiles_display(game['tiles'])}\n\n"
+                f"✓ Shut tiles: **{shut_tiles}**\n\n"
+                f"Press **Roll Dice** to continue!"
+            ),
+            color=0xe67e22
+        )
+        embed.set_footer(text=f"Bet: {fmt_num(game['bet'])} {emoji} • Win: {fmt_num(game['bet'] * SHUT_THE_BOX_PAYOUT)} {emoji}")
+        
+        await interaction.response.edit_message(embed=embed, view=self)
+
+
 @bot.tree.command(name="gamble", description="Play gambling games to win chips! 🎰")
 @app_commands.describe(game="Choose a game to play")
 @app_commands.choices(
     game=[
         app_commands.Choice(name="🎴 Higher or Lower", value="higher_lower"),
         app_commands.Choice(name="🃏 Video Poker", value="video_poker"),
+        app_commands.Choice(name="🎲 Shut the Box", value="shut_the_box"),
     ]
 )
 async def gamble_cmd(interaction: discord.Interaction, game: app_commands.Choice[str]):
