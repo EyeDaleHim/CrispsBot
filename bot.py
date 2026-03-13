@@ -1130,7 +1130,7 @@ async def auto_start_word_game(gid: str) -> bool:
 
 # ---------- Public ----------
 
-BOT_VERSION = "v2.3.0"
+BOT_VERSION = "v2.3.1"
 
 
 @bot.tree.command(name="version", description="Check bot version (debug)")
@@ -2381,20 +2381,24 @@ class BlackjackView(discord.ui.View):
             del _active_games[(self.gid, self.uid)]
     
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        gid, uid = str(interaction.guild_id), str(interaction.user.id)
-        game = _active_games.get((gid, uid))
-        if not game or game.get("type") != "blackjack":
+        # Verify the clicker is the game owner
+        if str(interaction.user.id) != self.uid:
             await interaction.response.send_message("❌ This isn't your game!", ephemeral=True)
+            return False
+        
+        # Check if game still exists (using stored keys)
+        game = _active_games.get((self.gid, self.uid))
+        if not game or game.get("type") != "blackjack":
+            await interaction.response.send_message("❌ Game expired. Start a new one!", ephemeral=True)
             return False
         return True
     
     async def player_bust(self, interaction: discord.Interaction, game: dict):
         """Handle player bust."""
-        gid, uid = str(interaction.guild_id), str(interaction.user.id)
         emoji = config.CHIPS["emoji"]
         
-        del _active_games[(gid, uid)]
-        new_balance = await db.get_balance(gid, uid)
+        del _active_games[(self.gid, self.uid)]
+        new_balance = await db.get_balance(self.gid, self.uid)
         
         embed = discord.Embed(
             title="🃏 Blackjack — BUST! ✗",
@@ -2412,7 +2416,6 @@ class BlackjackView(discord.ui.View):
     
     async def dealer_turn(self, interaction: discord.Interaction, game: dict):
         """Handle dealer's turn and resolve game."""
-        gid, uid = str(interaction.guild_id), str(interaction.user.id)
         emoji = config.CHIPS["emoji"]
         deck = game["deck"]
         
@@ -2426,14 +2429,14 @@ class BlackjackView(discord.ui.View):
         player_value = bj_hand_value(game["player_hand"])
         dealer_value = bj_hand_value(game["dealer_hand"])
         
-        del _active_games[(gid, uid)]
+        del _active_games[(self.gid, self.uid)]
         
         # Determine winner
         if dealer_value > 21:
             # Dealer busts - player wins
             winnings = game["bet"] * 2
-            await db.add_chips(gid, uid, interaction.user.display_name, winnings)
-            new_balance = await db.get_balance(gid, uid)
+            await db.add_chips(self.gid, self.uid, interaction.user.display_name, winnings)
+            new_balance = await db.get_balance(self.gid, self.uid)
             profit = winnings - game["bet"]
             
             embed = discord.Embed(
@@ -2450,8 +2453,8 @@ class BlackjackView(discord.ui.View):
         elif player_value > dealer_value:
             # Player wins
             winnings = game["bet"] * 2
-            await db.add_chips(gid, uid, interaction.user.display_name, winnings)
-            new_balance = await db.get_balance(gid, uid)
+            await db.add_chips(self.gid, self.uid, interaction.user.display_name, winnings)
+            new_balance = await db.get_balance(self.gid, self.uid)
             profit = winnings - game["bet"]
             
             embed = discord.Embed(
@@ -2467,7 +2470,7 @@ class BlackjackView(discord.ui.View):
             )
         elif dealer_value > player_value:
             # Dealer wins
-            new_balance = await db.get_balance(gid, uid)
+            new_balance = await db.get_balance(self.gid, self.uid)
             
             embed = discord.Embed(
                 title="🃏 Blackjack — Dealer Wins ✗",
@@ -2482,8 +2485,8 @@ class BlackjackView(discord.ui.View):
             )
         else:
             # Push (tie)
-            await db.add_chips(gid, uid, interaction.user.display_name, game["bet"])
-            new_balance = await db.get_balance(gid, uid)
+            await db.add_chips(self.gid, self.uid, interaction.user.display_name, game["bet"])
+            new_balance = await db.get_balance(self.gid, self.uid)
             
             embed = discord.Embed(
                 title="🃏 Blackjack — Push!",
@@ -2501,8 +2504,7 @@ class BlackjackView(discord.ui.View):
     
     @discord.ui.button(label="🃏 Hit", style=discord.ButtonStyle.primary)
     async def hit_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
-        gid, uid = str(interaction.guild_id), str(interaction.user.id)
-        game = _active_games.get((gid, uid))
+        game = _active_games.get((self.gid, self.uid))
         emoji = config.CHIPS["emoji"]
         
         # Draw a card
@@ -2545,19 +2547,17 @@ class BlackjackView(discord.ui.View):
     
     @discord.ui.button(label="✋ Stand", style=discord.ButtonStyle.secondary)
     async def stand_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
-        gid, uid = str(interaction.guild_id), str(interaction.user.id)
-        game = _active_games.get((gid, uid))
+        game = _active_games.get((self.gid, self.uid))
         
         await self.dealer_turn(interaction, game)
     
     @discord.ui.button(label="⬆️ Double", style=discord.ButtonStyle.success)
     async def double_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
-        gid, uid = str(interaction.guild_id), str(interaction.user.id)
-        game = _active_games.get((gid, uid))
+        game = _active_games.get((self.gid, self.uid))
         emoji = config.CHIPS["emoji"]
         
         # Check if player has enough to double
-        balance = await db.get_balance(gid, uid)
+        balance = await db.get_balance(self.gid, self.uid)
         if balance < game["bet"]:
             await interaction.response.send_message(
                 f"❌ Not enough crisps to double! You have **{fmt_num(balance)}** {emoji}",
@@ -2566,7 +2566,7 @@ class BlackjackView(discord.ui.View):
             return
         
         # Deduct additional bet
-        await db.add_chips(gid, uid, interaction.user.display_name, -game["bet"])
+        await db.add_chips(self.gid, self.uid, interaction.user.display_name, -game["bet"])
         game["bet"] *= 2
         game["doubled"] = True
         
