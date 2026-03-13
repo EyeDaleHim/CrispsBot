@@ -1130,7 +1130,7 @@ async def auto_start_word_game(gid: str) -> bool:
 
 # ---------- Public ----------
 
-BOT_VERSION = "v1.75.1"
+BOT_VERSION = "v1.75.2"
 
 
 @bot.tree.command(name="version", description="Check bot version (debug)")
@@ -1214,157 +1214,33 @@ async def chips_cmd(interaction: discord.Interaction, user: discord.Member, amou
     )
 
 
-@bot.tree.command(name="codepurple", description="Force a Code Purple message (admin only)")
-@app_commands.default_permissions(administrator=True)
-async def codepurple_cmd(interaction: discord.Interaction):
-    gid = str(interaction.guild_id)
-    channel_id = HARDCODED["channel_codepurple"]
-    channel = bot.get_channel(int(channel_id))
-    if not channel:
-        await interaction.response.send_message("Channel not found!", ephemeral=True)
-        return
-    await channel.send(random.choice(config.MESSAGES["code_purple"]))
-    await db.set_state(gid, "last_code_purple", datetime.now(timezone.utc).isoformat())
-    await interaction.response.send_message(f"Code purple posted to <#{channel_id}>", ephemeral=True)
+# @bot.tree.command(name="codepurple", description="Force a Code Purple message (admin only)")
+# @app_commands.default_permissions(administrator=True)
+# async def codepurple_cmd(interaction: discord.Interaction):
+#     gid = str(interaction.guild_id)
+#     channel_id = HARDCODED["channel_codepurple"]
+#     channel = bot.get_channel(int(channel_id))
+#     if not channel:
+#         await interaction.response.send_message("Channel not found!", ephemeral=True)
+#         return
+#     await channel.send(random.choice(config.MESSAGES["code_purple"]))
+#     await db.set_state(gid, "last_code_purple", datetime.now(timezone.utc).isoformat())
+#     await interaction.response.send_message(f"Code purple posted to <#{channel_id}>", ephemeral=True)
 
-@bot.tree.command(name="viewchannels", description="View current channel settings (admin only)")
-@app_commands.default_permissions(administrator=True)
-async def viewchannels_cmd(interaction: discord.Interaction):
-    lines = ["**Current Channel Settings (Hardcoded):**", ""]
-    lines.append(f"💬 Casual Questions: <#{HARDCODED['channel_casual']}>")
-    lines.append(f"✨ Typology Questions: <#{HARDCODED['channel_typology']}>")
-    lines.append(f"💜 Code Purple: <#{HARDCODED['channel_codepurple']}>")
-    lines.append(f"🏆 Activity Rewards: <#{HARDCODED['channel_activity_rewards']}>")
-    lines.append(f"💬 Chatter Rewards: <#{HARDCODED['channel_chatter_rewards']}>")
-    lines.append("📖 Word Game: *uses database*")
-    lines.append("🥔 Chip Drops: *Drops in active channels*")
-    
-    # Blacklisted categories
-    lines.append("")
-    lines.append("**🚫 Chip Drop Blacklist (by category):**")
-    for cat_id in HARDCODED["blacklist_categories"]:
-        lines.append(f"• Category ID: {cat_id}")
-    
-    lines.append("")
-    lines.append("*Config is hardcoded in bot.py*")
+# @bot.tree.command(name="viewchannels", description="View current channel settings (admin only)")
+# @app_commands.default_permissions(administrator=True)
+# async def viewchannels_cmd(interaction: discord.Interaction):
+#     ...
 
-    await interaction.response.send_message("\n".join(lines), ephemeral=True)
+# @bot.tree.command(name="viewschedule", description="View upcoming scheduled posts (admin only)")
+# @app_commands.default_permissions(administrator=True)
+# async def viewschedule_cmd(interaction: discord.Interaction):
+#     ...
 
-@bot.tree.command(name="viewschedule", description="View upcoming scheduled posts (admin only)")
-@app_commands.default_permissions(administrator=True)
-async def viewschedule_cmd(interaction: discord.Interaction):
-    gid = str(interaction.guild_id)
-    now_utc = datetime.now(timezone.utc)
-    now_manila = datetime.now(MANILA_TZ)
-
-    lines = ["**📅 Schedule & Status**", ""]
-
-    # --- Channel Status ---
-    lines.append("**📌 Channel Setup**")
-    channel_types = ["casual", "typology", "codepurple", "activity_rewards"]
-    channel_names = {
-        "casual": "💬 Casual Questions",
-        "typology": "✨ Typology Questions",
-        "codepurple": "💜 Code Purple",
-        "activity_rewards": "🏆 Activity Rewards",
-    }
-    for ctype in channel_types:
-        ch_id = HARDCODED.get(f"channel_{ctype}")
-        if ch_id:
-            lines.append(f"✅ {channel_names[ctype]}: <#{ch_id}>")
-        else:
-            lines.append(f"❌ {channel_names[ctype]}: Not set")
-    # Chip drops don't need a channel - they drop in active channels
-    lines.append("✅ 🥔 Chip Drops: Drops in active channels")
-    
-    lines.append("")
-
-    # --- Ping Roles Status ---
-    lines.append("**🔔 Ping Roles**")
-    for qtype in ["casual", "typology"]:
-        role_id = HARDCODED.get(f"ping_role_{qtype}")
-        qname = {"casual": "💬 Casual", "typology": "✨ Typology"}[qtype]
-        if role_id:
-            lines.append(f"✅ {qname}: <@&{role_id}>")
-        else:
-            lines.append(f"❌ {qname}: Not set")
-    
-    lines.append("")
-
-    # --- Upcoming Schedule ---
-    lines.append("**⏰ Daily Question Schedule (PH Time)**")
-    
-    # Show fixed question times
-    names = {
-        "casual": "💬 Casual Question",
-        "typology": "✨ Typology Question",
-    }
-    times = {
-        "casual": "8:00 PM",
-        "typology": "12:00 AM",
-    }
-    # Order by time of day for nice display
-    for qtype in ["casual", "typology"]:
-        sched = QUESTION_SCHEDULES[qtype]
-        ch_id = HARDCODED.get(f"channel_{qtype}")
-        status = f"→ <#{ch_id}>" if ch_id else "→ ⚠️ No channel"
-        
-        # Calculate next occurrence
-        next_post = now_manila.replace(hour=sched["hour"], minute=sched["minute"], second=0, microsecond=0)
-        if next_post <= now_manila:
-            next_post += timedelta(days=1)
-        ts = int(next_post.astimezone(timezone.utc).timestamp())
-        
-        lines.append(f"{names[qtype]} @ {times[qtype]} (<t:{ts}:R>) {status}")
-
-    lines.append("")
-
-    # Activity rewards
-    act_sched = config.ACTIVITY_REWARDS
-    next_activity = now_manila.replace(hour=act_sched["hour"], minute=act_sched["minute"], second=0, microsecond=0)
-    if next_activity <= now_manila:
-        next_activity += timedelta(days=1)
-    ts = int(next_activity.astimezone(timezone.utc).timestamp())
-    ch_id = HARDCODED["channel_activity_rewards"]
-    status = f"→ <#{ch_id}>" if ch_id else "→ ⚠️ No channel"
-    lines.append(f"🏆 Activity Rewards <t:{ts}:R> {status}")
-
-    lines.append("")
-    lines.append(f"💜 Code Purple: Checks every hour")
-    lines.append(f"🥔 Chip Drops: {config.CHIP_DROP['min_delay']}-{config.CHIP_DROP['max_delay']}m after activity")
-    lines.append("")
-    lines.append(f"*Fixed daily schedules • All times in PH timezone*")
-
-    await interaction.response.send_message("\n".join(lines), ephemeral=True)
-
-
-@bot.tree.command(name="forcepost", description="Force post a question or trigger chip drop (admin only)")
-@app_commands.default_permissions(administrator=True)
-@app_commands.describe(feature="What to post")
-@app_commands.choices(
-    feature=[
-        app_commands.Choice(name="💬 Casual Question", value="casual"),
-        app_commands.Choice(name="✨ Typology Question", value="typology"),
-        app_commands.Choice(name="🥔 Chip Drop", value="chipdrop"),
-    ]
-)
-async def forcepost_cmd(interaction: discord.Interaction, feature: app_commands.Choice[str]):
-    gid = str(interaction.guild_id)
-    
-    if feature.value == "chipdrop":
-        await interaction.response.send_message("🥔 Forcing chip drop...", ephemeral=True)
-        await do_chip_drop(gid)
-    else:
-        qtype = feature.value
-        post_fn = QUESTION_POST_FNS.get(qtype)
-        if post_fn:
-            await interaction.response.send_message(f"Posting **{qtype.title()}** question...", ephemeral=True)
-            try:
-                await post_fn(gid)
-            except Exception as e:
-                await interaction.followup.send(f"Error: {e}", ephemeral=True)
-        else:
-            await interaction.response.send_message(f"Unknown question type: {qtype}", ephemeral=True)
+# @bot.tree.command(name="forcepost", description="Force post a question or trigger chip drop (admin only)")
+# @app_commands.default_permissions(administrator=True)
+# async def forcepost_cmd(interaction: discord.Interaction, feature: app_commands.Choice[str]):
+#     ...
 
 
 # ======================== GAMBLING ========================
@@ -1628,7 +1504,7 @@ class HigherLowerView(discord.ui.View):
             item.disabled = True
 
 
-@bot.tree.command(name="gamble", description="Play gambling games to win crisps! 🎰")
+@bot.tree.command(name="gamble", description="Play gambling games to win chips! 🎰")
 @app_commands.describe(game="Choose a game to play")
 @app_commands.choices(
     game=[
