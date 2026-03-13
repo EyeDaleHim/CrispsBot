@@ -7,6 +7,10 @@ import os
 import asyncio
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
+from zoneinfo import ZoneInfo
+
+# Use Manila timezone for date tracking (must match bot.py)
+MANILA_TZ = ZoneInfo("Asia/Manila")
 
 # Check for Turso configuration
 TURSO_URL = os.environ.get("TURSO_DATABASE_URL")
@@ -288,7 +292,8 @@ async def get_all_chips(guild_id: str) -> list[tuple]:
 # ==================== DAILY CHATTER ====================
 
 async def increment_chatter(guild_id: str, user_id: str, username: str):
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    # Use Manila time for date to match rewards schedule
+    today = datetime.now(MANILA_TZ).strftime("%Y-%m-%d")
     async with get_connection() as conn:
         await conn.execute(
             """INSERT INTO daily_chatter (guild_id, user_id, username, message_count, date)
@@ -535,7 +540,8 @@ async def update_word_game_message(guild_id: str, message_id: str):
 # ==================== DAILY ACTIVITY ====================
 
 async def increment_activity_message(guild_id: str, user_id: str, username: str):
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    # Use Manila time for date to match rewards schedule
+    today = datetime.now(MANILA_TZ).strftime("%Y-%m-%d")
     async with get_connection() as conn:
         await conn.execute(
             """INSERT INTO daily_activity (guild_id, user_id, username, message_points, vc_minutes, date)
@@ -548,7 +554,8 @@ async def increment_activity_message(guild_id: str, user_id: str, username: str)
 
 
 async def add_vc_minutes(guild_id: str, user_id: str, username: str, minutes: int):
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    # Use Manila time for date to match rewards schedule
+    today = datetime.now(MANILA_TZ).strftime("%Y-%m-%d")
     async with get_connection() as conn:
         await conn.execute(
             """INSERT INTO daily_activity (guild_id, user_id, username, message_points, vc_minutes, date)

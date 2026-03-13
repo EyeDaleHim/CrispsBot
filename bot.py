@@ -812,29 +812,30 @@ async def schedule_loop():
     for guild in bot.guilds:
         gid = str(guild.id)
 
-        for qtype, sched in QUESTION_SCHEDULES.items():
-            if now_manila.hour == sched["hour"] and now_manila.minute == sched["minute"]:
-                # Check if already posted recently (within 23 hours) - prevents race conditions
-                last_iso = await db.get_state(gid, f"last_{qtype}_question")
-                should_post = True
-                if last_iso:
-                    last_dt = datetime.fromisoformat(last_iso)
-                    if last_dt.tzinfo is None:
-                        last_dt = last_dt.replace(tzinfo=timezone.utc)
-                    hours_since = (now_utc - last_dt).total_seconds() / 3600
-                    if hours_since < 23:  # Posted within last 23 hours = skip
-                        should_post = False
-                
-                if should_post:
-                    await db.set_state(gid, f"last_{qtype}_question", now_utc.isoformat())
-                    
-                    post_fn = QUESTION_POST_FNS.get(qtype)
-                    if post_fn:
-                        try:
-                            await post_fn(gid)
-                            print(f"[Schedule] Posted {qtype} question for guild {gid}")
-                        except Exception as e:
-                            print(f"Error posting {qtype}: {e}")
+        # DISABLED: Automatic QOTD and typology posting
+        # for qtype, sched in QUESTION_SCHEDULES.items():
+        #     if now_manila.hour == sched["hour"] and now_manila.minute == sched["minute"]:
+        #         # Check if already posted recently (within 23 hours) - prevents race conditions
+        #         last_iso = await db.get_state(gid, f"last_{qtype}_question")
+        #         should_post = True
+        #         if last_iso:
+        #             last_dt = datetime.fromisoformat(last_iso)
+        #             if last_dt.tzinfo is None:
+        #                 last_dt = last_dt.replace(tzinfo=timezone.utc)
+        #             hours_since = (now_utc - last_dt).total_seconds() / 3600
+        #             if hours_since < 23:  # Posted within last 23 hours = skip
+        #                 should_post = False
+        #         
+        #         if should_post:
+        #             await db.set_state(gid, f"last_{qtype}_question", now_utc.isoformat())
+        #             
+        #             post_fn = QUESTION_POST_FNS.get(qtype)
+        #             if post_fn:
+        #                 try:
+        #                     await post_fn(gid)
+        #                     print(f"[Schedule] Posted {qtype} question for guild {gid}")
+        #                 except Exception as e:
+        #                     print(f"Error posting {qtype}: {e}")
 
         # --- Chatter Rewards (fixed Manila time) ---
         sched = config.CHATTER_SCHEDULE
@@ -1134,7 +1135,7 @@ async def auto_start_word_game(gid: str) -> bool:
 
 # ---------- Public ----------
 
-BOT_VERSION = "v1.74.0"
+BOT_VERSION = "v1.75.0"
 
 
 @bot.tree.command(name="version", description="Check bot version (debug)")
@@ -1518,6 +1519,290 @@ async def forcepost_cmd(interaction: discord.Interaction, feature: app_commands.
                 await interaction.followup.send(f"Error: {e}", ephemeral=True)
         else:
             await interaction.response.send_message(f"Unknown question type: {qtype}", ephemeral=True)
+
+
+# ======================== GAMBLING ========================
+
+CARD_SUITS = ['♠', '♥', '♦', '♣']
+CARD_RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+CARD_VALUES = {r: i for i, r in enumerate(CARD_RANKS)}
+
+
+def create_deck() -> list[tuple[str, str]]:
+    """Create a shuffled 52-card deck."""
+    deck = [(rank, suit) for suit in CARD_SUITS for rank in CARD_RANKS]
+    random.shuffle(deck)
+    return deck
+
+
+def card_str(card: tuple[str, str]) -> str:
+    """Format card as emoji-style string: [K♠]"""
+    return f"`[{card[0]}{card[1]}]`"
+
+
+def compare_cards(current: tuple, next_card: tuple) -> str:
+    """Compare two cards. Returns 'higher', 'lower', or 'tie'."""
+    curr_val = CARD_VALUES[current[0]]
+    next_val = CARD_VALUES[next_card[0]]
+    if next_val > curr_val:
+        return 'higher'
+    elif next_val < curr_val:
+        return 'lower'
+    return 'tie'
+
+
+def hl_multiplier(streak: int) -> float:
+    """Calculate payout multiplier based on streak."""
+    return 1.0 + (streak * 0.5)
+
+
+# Store active games: {(guild_id, user_id): game_state}
+_active_games: dict[tuple[str, str], dict] = {}
+
+
+class BetModal(discord.ui.Modal, title="Place Your Bet"):
+    """Modal to enter bet amount."""
+    
+    bet_input = discord.ui.TextInput(
+        label="How many crisps would you like to bet?",
+        placeholder="e.g. 100",
+        min_length=1,
+        max_length=10,
+    )
+    
+    def __init__(self, game_type: str):
+        super().__init__()
+        self.game_type = game_type
+    
+    async def on_submit(self, interaction: discord.Interaction):
+        gid, uid = str(interaction.guild_id), str(interaction.user.id)
+        
+        # Parse bet amount
+        try:
+            bet = int(self.bet_input.value.replace(",", "").strip())
+        except ValueError:
+            await interaction.response.send_message("❌ Please enter a valid number.", ephemeral=True)
+            return
+        
+        if bet <= 0:
+            await interaction.response.send_message("❌ Bet must be greater than 0.", ephemeral=True)
+            return
+        
+        # Check balance
+        balance = await db.get_balance(gid, uid)
+        if bet > balance:
+            emoji = config.CHIPS["emoji"]
+            await interaction.response.send_message(
+                f"❌ You don't have enough crisps! You have **{fmt_num(balance)}** {emoji}",
+                ephemeral=True
+            )
+            return
+        
+        # Check for existing game
+        if (gid, uid) in _active_games:
+            await interaction.response.send_message("❌ You already have a game in progress!", ephemeral=True)
+            return
+        
+        # Deduct bet and start game
+        await db.add_chips(gid, uid, interaction.user.display_name, -bet)
+        
+        if self.game_type == "higher_lower":
+            await start_higher_lower(interaction, bet)
+
+
+async def start_higher_lower(interaction: discord.Interaction, bet: int):
+    """Start a new Higher or Lower game."""
+    gid, uid = str(interaction.guild_id), str(interaction.user.id)
+    emoji = config.CHIPS["emoji"]
+    
+    deck = create_deck()
+    current = deck.pop()
+    
+    # Store game state
+    _active_games[(gid, uid)] = {
+        "type": "higher_lower",
+        "deck": deck,
+        "current": current,
+        "bet": bet,
+        "streak": 0,
+    }
+    
+    multiplier = hl_multiplier(0)
+    potential = int(bet * multiplier)
+    
+    embed = discord.Embed(
+        title="🎴 Higher or Lower",
+        description=(
+            f"**Current card:** {card_str(current)}\n\n"
+            f"Will the next card be **higher** or **lower**?\n\n"
+            f"Streak: **0** • Multiplier: **{multiplier:.1f}x** • Value: **{fmt_num(potential)}** {emoji}"
+        ),
+        color=0x9b59b6
+    )
+    embed.set_footer(text=f"Bet: {fmt_num(bet)} {emoji}")
+    
+    view = HigherLowerView()
+    await interaction.response.send_message(embed=embed, view=view)
+
+
+class HigherLowerView(discord.ui.View):
+    """Game controls for Higher or Lower."""
+    
+    def __init__(self):
+        super().__init__(timeout=120)
+    
+    async def on_timeout(self):
+        # Game expires - player loses bet
+        pass
+    
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        gid, uid = str(interaction.guild_id), str(interaction.user.id)
+        if (gid, uid) not in _active_games:
+            await interaction.response.send_message("❌ This isn't your game!", ephemeral=True)
+            return False
+        return True
+    
+    @discord.ui.button(label="⬆️ Higher", style=discord.ButtonStyle.primary)
+    async def higher_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.make_guess(interaction, "higher")
+    
+    @discord.ui.button(label="⬇️ Lower", style=discord.ButtonStyle.primary)
+    async def lower_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.make_guess(interaction, "lower")
+    
+    @discord.ui.button(label="💰 Cash Out", style=discord.ButtonStyle.success)
+    async def cashout_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        gid, uid = str(interaction.guild_id), str(interaction.user.id)
+        game = _active_games.pop((gid, uid), None)
+        
+        if not game:
+            await interaction.response.send_message("❌ No active game found.", ephemeral=True)
+            return
+        
+        emoji = config.CHIPS["emoji"]
+        multiplier = hl_multiplier(game["streak"])
+        winnings = int(game["bet"] * multiplier)
+        
+        await db.add_chips(gid, uid, interaction.user.display_name, winnings)
+        new_balance = await db.get_balance(gid, uid)
+        
+        profit = winnings - game["bet"]
+        
+        embed = discord.Embed(
+            title="🎴 Higher or Lower — Cashed Out!",
+            description=(
+                f"**Final card:** {card_str(game['current'])}\n\n"
+                f"Streak: **{game['streak']}** • Multiplier: **{multiplier:.1f}x**\n\n"
+                f"💰 You won **{fmt_num(winnings)}** {emoji} (+{fmt_num(profit)} profit)\n"
+                f"Balance: **{fmt_num(new_balance)}** {emoji}"
+            ),
+            color=0x2ecc71
+        )
+        
+        self.disable_all()
+        await interaction.response.edit_message(embed=embed, view=self)
+    
+    async def make_guess(self, interaction: discord.Interaction, guess: str):
+        gid, uid = str(interaction.guild_id), str(interaction.user.id)
+        game = _active_games.get((gid, uid))
+        
+        if not game:
+            await interaction.response.send_message("❌ No active game found.", ephemeral=True)
+            return
+        
+        emoji = config.CHIPS["emoji"]
+        deck = game["deck"]
+        current = game["current"]
+        
+        # Reshuffle if deck is low
+        if len(deck) < 5:
+            deck = create_deck()
+            game["deck"] = deck
+        
+        # Draw next card
+        next_card = deck.pop()
+        result = compare_cards(current, next_card)
+        
+        if result == "tie":
+            # Tie - no change, continue
+            game["current"] = next_card
+            multiplier = hl_multiplier(game["streak"])
+            potential = int(game["bet"] * multiplier)
+            
+            embed = discord.Embed(
+                title="🎴 Higher or Lower — Tie!",
+                description=(
+                    f"**Previous:** {card_str(current)} → **Next:** {card_str(next_card)}\n\n"
+                    f"It's a tie! Your streak continues.\n\n"
+                    f"Streak: **{game['streak']}** • Multiplier: **{multiplier:.1f}x** • Value: **{fmt_num(potential)}** {emoji}"
+                ),
+                color=0xf39c12
+            )
+            embed.set_footer(text=f"Bet: {fmt_num(game['bet'])} {emoji}")
+            await interaction.response.edit_message(embed=embed, view=self)
+        
+        elif guess == result:
+            # Correct guess!
+            game["streak"] += 1
+            game["current"] = next_card
+            multiplier = hl_multiplier(game["streak"])
+            potential = int(game["bet"] * multiplier)
+            
+            embed = discord.Embed(
+                title="🎴 Higher or Lower — Correct! ✓",
+                description=(
+                    f"**Previous:** {card_str(current)} → **Next:** {card_str(next_card)}\n\n"
+                    f"The card was **{result}**! Keep going or cash out?\n\n"
+                    f"Streak: **{game['streak']}** • Multiplier: **{multiplier:.1f}x** • Value: **{fmt_num(potential)}** {emoji}"
+                ),
+                color=0x3498db
+            )
+            embed.set_footer(text=f"Bet: {fmt_num(game['bet'])} {emoji}")
+            await interaction.response.edit_message(embed=embed, view=self)
+        
+        else:
+            # Wrong guess - lose everything
+            del _active_games[(gid, uid)]
+            
+            embed = discord.Embed(
+                title="🎴 Higher or Lower — Busted! ✗",
+                description=(
+                    f"**Previous:** {card_str(current)} → **Next:** {card_str(next_card)}\n\n"
+                    f"The card was **{result}**. You guessed **{guess}**.\n\n"
+                    f"💸 You lost **{fmt_num(game['bet'])}** {emoji}"
+                ),
+                color=0xe74c3c
+            )
+            
+            self.disable_all()
+            await interaction.response.edit_message(embed=embed, view=self)
+    
+    def disable_all(self):
+        for item in self.children:
+            item.disabled = True
+
+
+@bot.tree.command(name="gamble", description="Play gambling games to win crisps! 🎰")
+@app_commands.describe(game="Choose a game to play")
+@app_commands.choices(
+    game=[
+        app_commands.Choice(name="🎴 Higher or Lower", value="higher_lower"),
+    ]
+)
+async def gamble_cmd(interaction: discord.Interaction, game: app_commands.Choice[str]):
+    gid, uid = str(interaction.guild_id), str(interaction.user.id)
+    
+    # Check for existing game
+    if (gid, uid) in _active_games:
+        await interaction.response.send_message(
+            "❌ You already have a game in progress! Finish it first.",
+            ephemeral=True
+        )
+        return
+    
+    # Show bet modal
+    modal = BetModal(game.value)
+    await interaction.response.send_modal(modal)
 
 
 # ---------- Ping Role ----------

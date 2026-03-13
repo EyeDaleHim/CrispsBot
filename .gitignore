@@ -22,6 +22,9 @@ bot_data.db
 .DS_Store
 Thumbs.db
 
+# Local scripts
+sync-from-github.ps1
+
 # Old Node/TS files (can delete these)
 node_modules/
 dist/
