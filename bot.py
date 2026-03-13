@@ -1130,7 +1130,7 @@ async def auto_start_word_game(gid: str) -> bool:
 
 # ---------- Public ----------
 
-BOT_VERSION = "v2.2.1"
+BOT_VERSION = "v2.3.0"
 
 
 @bot.tree.command(name="version", description="Check bot version (debug)")
@@ -1336,6 +1336,8 @@ class BetModal(discord.ui.Modal, title="Place Your Bet!"):
             await start_video_poker(interaction, bet)
         elif self.game_type == "shut_the_box":
             await start_shut_the_box(interaction, bet)
+        elif self.game_type == "blackjack":
+            await start_blackjack(interaction, bet)
 
 
 async def start_higher_lower(interaction: discord.Interaction, bet: int, use_followup: bool = False):
@@ -1369,7 +1371,7 @@ async def start_higher_lower(interaction: discord.Interaction, bet: int, use_fol
     )
     embed.set_footer(text=f"Bet: {fmt_num(bet)} {emoji}")
     
-    view = HigherLowerView()
+    view = HigherLowerView(gid, uid)
     if use_followup:
         await interaction.followup.send(embed=embed, view=view)
     else:
@@ -1409,6 +1411,8 @@ class PlayAgainView(discord.ui.View):
             await start_video_poker(interaction, self.bet, use_followup=True)
         elif self.game_type == "shut_the_box":
             await start_shut_the_box(interaction, self.bet, use_followup=True)
+        elif self.game_type == "blackjack":
+            await start_blackjack(interaction, self.bet, use_followup=True)
         else:
             await start_higher_lower(interaction, self.bet, use_followup=True)
     
@@ -1420,12 +1424,15 @@ class PlayAgainView(discord.ui.View):
 class HigherLowerView(discord.ui.View):
     """Game controls for Higher or Lower."""
     
-    def __init__(self):
+    def __init__(self, gid: str, uid: str):
         super().__init__(timeout=120)
+        self.gid = gid
+        self.uid = uid
     
     async def on_timeout(self):
-        # Game expires - player loses bet
-        pass
+        # Game expires - clean up
+        if (self.gid, self.uid) in _active_games:
+            del _active_games[(self.gid, self.uid)]
     
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         gid, uid = str(interaction.guild_id), str(interaction.user.id)
@@ -1694,7 +1701,7 @@ async def start_video_poker(interaction: discord.Interaction, bet: int, use_foll
     )
     embed.set_footer(text=f"Bet: {fmt_num(bet)} {emoji}")
     
-    view = VideoPokerHoldView()
+    view = VideoPokerHoldView(gid, uid)
     if use_followup:
         await interaction.followup.send(embed=embed, view=view)
     else:
@@ -1704,8 +1711,14 @@ async def start_video_poker(interaction: discord.Interaction, bet: int, use_foll
 class VideoPokerHoldView(discord.ui.View):
     """View for selecting which cards to hold in Video Poker."""
     
-    def __init__(self):
+    def __init__(self, gid: str, uid: str):
         super().__init__(timeout=120)
+        self.gid = gid
+        self.uid = uid
+    
+    async def on_timeout(self):
+        if (self.gid, self.uid) in _active_games:
+            del _active_games[(self.gid, self.uid)]
     
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         gid, uid = str(interaction.guild_id), str(interaction.user.id)
@@ -1916,7 +1929,7 @@ async def start_shut_the_box(interaction: discord.Interaction, bet: int, use_fol
     )
     embed.set_footer(text=f"Bet: {fmt_num(bet)} {emoji} • Win: {fmt_num(bet * SHUT_THE_BOX_PAYOUT)} {emoji}")
     
-    view = ShutTheBoxView()
+    view = ShutTheBoxView(gid, uid)
     if use_followup:
         await interaction.followup.send(embed=embed, view=view)
     else:
@@ -1926,8 +1939,14 @@ async def start_shut_the_box(interaction: discord.Interaction, bet: int, use_fol
 class ShutTheBoxView(discord.ui.View):
     """View for Shut the Box game."""
     
-    def __init__(self):
+    def __init__(self, gid: str, uid: str):
         super().__init__(timeout=180)
+        self.gid = gid
+        self.uid = uid
+    
+    async def on_timeout(self):
+        if (self.gid, self.uid) in _active_games:
+            del _active_games[(self.gid, self.uid)]
     
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         gid, uid = str(interaction.guild_id), str(interaction.user.id)
@@ -2202,6 +2221,374 @@ class ShutTheBoxView(discord.ui.View):
         await interaction.response.edit_message(embed=embed, view=self)
 
 
+# ======================== BLACKJACK ========================
+
+
+def bj_card_value(card: tuple[str, str]) -> int:
+    """Get the value of a card (Ace returns 11, handled separately)."""
+    rank = card[0]
+    if rank in ['J', 'Q', 'K']:
+        return 10
+    elif rank == 'A':
+        return 11
+    else:
+        return int(rank)
+
+
+def bj_hand_value(hand: list[tuple[str, str]]) -> int:
+    """Calculate the best value of a hand (adjusting for Aces)."""
+    total = sum(bj_card_value(card) for card in hand)
+    aces = sum(1 for card in hand if card[0] == 'A')
+    
+    # Reduce Aces from 11 to 1 if needed
+    while total > 21 and aces > 0:
+        total -= 10
+        aces -= 1
+    
+    return total
+
+
+def bj_hand_display(hand: list[tuple[str, str]], hide_first: bool = False) -> str:
+    """Display a hand of cards."""
+    if hide_first:
+        cards = "`[??]` " + " ".join(f"`[{c[0]}{c[1]}]`" for c in hand[1:])
+        return cards
+    else:
+        cards = " ".join(f"`[{c[0]}{c[1]}]`" for c in hand)
+        return f"{cards} = **{bj_hand_value(hand)}**"
+
+
+async def start_blackjack(interaction: discord.Interaction, bet: int, use_followup: bool = False):
+    """Start a new Blackjack game."""
+    gid, uid = str(interaction.guild_id), str(interaction.user.id)
+    emoji = config.CHIPS["emoji"]
+    
+    deck = create_deck()
+    # Use 2 decks shuffled together
+    deck = deck + create_deck()
+    random.shuffle(deck)
+    
+    # Deal initial cards
+    player_hand = [deck.pop(), deck.pop()]
+    dealer_hand = [deck.pop(), deck.pop()]
+    
+    # Store game state
+    _active_games[(gid, uid)] = {
+        "type": "blackjack",
+        "deck": deck,
+        "player_hand": player_hand,
+        "dealer_hand": dealer_hand,
+        "bet": bet,
+        "original_bet": bet,
+        "doubled": False,
+    }
+    
+    # Check for blackjacks
+    player_bj = bj_hand_value(player_hand) == 21
+    dealer_bj = bj_hand_value(dealer_hand) == 21
+    
+    if player_bj or dealer_bj:
+        del _active_games[(gid, uid)]
+        
+        if player_bj and dealer_bj:
+            # Push - return bet
+            await db.add_chips(gid, uid, interaction.user.display_name, bet)
+            new_balance = await db.get_balance(gid, uid)
+            
+            embed = discord.Embed(
+                title="🃏 Blackjack — Push!",
+                description=(
+                    f"**Dealer:** {bj_hand_display(dealer_hand)}\n"
+                    f"**You:** {bj_hand_display(player_hand)}\n\n"
+                    f"🤝 Both have Blackjack! It's a tie.\n\n"
+                    f"Bet returned: **{fmt_num(bet)}** {emoji}\n"
+                    f"Balance: **{fmt_num(new_balance)}** {emoji}"
+                ),
+                color=0xf39c12
+            )
+            view = PlayAgainView(bet, "blackjack")
+        elif player_bj:
+            # Player blackjack - 2.5x payout
+            winnings = int(bet * 2.5)
+            await db.add_chips(gid, uid, interaction.user.display_name, winnings)
+            new_balance = await db.get_balance(gid, uid)
+            profit = winnings - bet
+            
+            embed = discord.Embed(
+                title="🃏 Blackjack — BLACKJACK! 🌟",
+                description=(
+                    f"**Dealer:** {bj_hand_display(dealer_hand)}\n"
+                    f"**You:** {bj_hand_display(player_hand)}\n\n"
+                    f"🌟 **BLACKJACK!** Natural 21!\n\n"
+                    f"💰 You won **{fmt_num(winnings)}** {emoji} (+{fmt_num(profit)} profit)\n"
+                    f"Balance: **{fmt_num(new_balance)}** {emoji}"
+                ),
+                color=0x2ecc71
+            )
+            view = PlayAgainView(bet, "blackjack")
+        else:
+            # Dealer blackjack - player loses
+            new_balance = await db.get_balance(gid, uid)
+            
+            embed = discord.Embed(
+                title="🃏 Blackjack — Dealer Blackjack ✗",
+                description=(
+                    f"**Dealer:** {bj_hand_display(dealer_hand)}\n"
+                    f"**You:** {bj_hand_display(player_hand)}\n\n"
+                    f"❌ Dealer has Blackjack!\n\n"
+                    f"💸 You lost **{fmt_num(bet)}** {emoji}\n"
+                    f"Balance: **{fmt_num(new_balance)}** {emoji}"
+                ),
+                color=0xe74c3c
+            )
+            view = PlayAgainView(bet, "blackjack")
+        
+        if use_followup:
+            await interaction.followup.send(embed=embed, view=view)
+        else:
+            await interaction.response.send_message(embed=embed, view=view)
+        return
+    
+    # Normal game - player's turn
+    embed = discord.Embed(
+        title="🃏 Blackjack",
+        description=(
+            f"**Dealer:** {bj_hand_display(dealer_hand, hide_first=True)}\n"
+            f"**You:** {bj_hand_display(player_hand)}\n\n"
+            f"**Hit** to draw, **Stand** to hold, or **Double** to double down!"
+        ),
+        color=0x9b59b6
+    )
+    embed.set_footer(text=f"Bet: {fmt_num(bet)} {emoji}")
+    
+    view = BlackjackView(gid, uid)
+    if use_followup:
+        await interaction.followup.send(embed=embed, view=view)
+    else:
+        await interaction.response.send_message(embed=embed, view=view)
+
+
+class BlackjackView(discord.ui.View):
+    """View for Blackjack game."""
+    
+    def __init__(self, gid: str, uid: str):
+        super().__init__(timeout=120)
+        self.gid = gid
+        self.uid = uid
+    
+    async def on_timeout(self):
+        if (self.gid, self.uid) in _active_games:
+            del _active_games[(self.gid, self.uid)]
+    
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        gid, uid = str(interaction.guild_id), str(interaction.user.id)
+        game = _active_games.get((gid, uid))
+        if not game or game.get("type") != "blackjack":
+            await interaction.response.send_message("❌ This isn't your game!", ephemeral=True)
+            return False
+        return True
+    
+    async def player_bust(self, interaction: discord.Interaction, game: dict):
+        """Handle player bust."""
+        gid, uid = str(interaction.guild_id), str(interaction.user.id)
+        emoji = config.CHIPS["emoji"]
+        
+        del _active_games[(gid, uid)]
+        new_balance = await db.get_balance(gid, uid)
+        
+        embed = discord.Embed(
+            title="🃏 Blackjack — BUST! ✗",
+            description=(
+                f"**Dealer:** {bj_hand_display(game['dealer_hand'], hide_first=True)}\n"
+                f"**You:** {bj_hand_display(game['player_hand'])}\n\n"
+                f"💥 **BUST!** You went over 21!\n\n"
+                f"💸 You lost **{fmt_num(game['bet'])}** {emoji}\n"
+                f"Balance: **{fmt_num(new_balance)}** {emoji}"
+            ),
+            color=0xe74c3c
+        )
+        
+        await interaction.response.edit_message(embed=embed, view=PlayAgainView(game['original_bet'], "blackjack"))
+    
+    async def dealer_turn(self, interaction: discord.Interaction, game: dict):
+        """Handle dealer's turn and resolve game."""
+        gid, uid = str(interaction.guild_id), str(interaction.user.id)
+        emoji = config.CHIPS["emoji"]
+        deck = game["deck"]
+        
+        # Dealer draws until 17+
+        while bj_hand_value(game["dealer_hand"]) < 17:
+            if len(deck) < 1:
+                deck = create_deck() + create_deck()
+                random.shuffle(deck)
+            game["dealer_hand"].append(deck.pop())
+        
+        player_value = bj_hand_value(game["player_hand"])
+        dealer_value = bj_hand_value(game["dealer_hand"])
+        
+        del _active_games[(gid, uid)]
+        
+        # Determine winner
+        if dealer_value > 21:
+            # Dealer busts - player wins
+            winnings = game["bet"] * 2
+            await db.add_chips(gid, uid, interaction.user.display_name, winnings)
+            new_balance = await db.get_balance(gid, uid)
+            profit = winnings - game["bet"]
+            
+            embed = discord.Embed(
+                title="🃏 Blackjack — Dealer Busts! ✓",
+                description=(
+                    f"**Dealer:** {bj_hand_display(game['dealer_hand'])} 💥\n"
+                    f"**You:** {bj_hand_display(game['player_hand'])}\n\n"
+                    f"🎉 Dealer busted! You win!\n\n"
+                    f"💰 You won **{fmt_num(winnings)}** {emoji} (+{fmt_num(profit)} profit)\n"
+                    f"Balance: **{fmt_num(new_balance)}** {emoji}"
+                ),
+                color=0x2ecc71
+            )
+        elif player_value > dealer_value:
+            # Player wins
+            winnings = game["bet"] * 2
+            await db.add_chips(gid, uid, interaction.user.display_name, winnings)
+            new_balance = await db.get_balance(gid, uid)
+            profit = winnings - game["bet"]
+            
+            embed = discord.Embed(
+                title="🃏 Blackjack — You Win! ✓",
+                description=(
+                    f"**Dealer:** {bj_hand_display(game['dealer_hand'])}\n"
+                    f"**You:** {bj_hand_display(game['player_hand'])}\n\n"
+                    f"🎉 **{player_value}** beats **{dealer_value}**!\n\n"
+                    f"💰 You won **{fmt_num(winnings)}** {emoji} (+{fmt_num(profit)} profit)\n"
+                    f"Balance: **{fmt_num(new_balance)}** {emoji}"
+                ),
+                color=0x2ecc71
+            )
+        elif dealer_value > player_value:
+            # Dealer wins
+            new_balance = await db.get_balance(gid, uid)
+            
+            embed = discord.Embed(
+                title="🃏 Blackjack — Dealer Wins ✗",
+                description=(
+                    f"**Dealer:** {bj_hand_display(game['dealer_hand'])}\n"
+                    f"**You:** {bj_hand_display(game['player_hand'])}\n\n"
+                    f"❌ **{dealer_value}** beats **{player_value}**\n\n"
+                    f"💸 You lost **{fmt_num(game['bet'])}** {emoji}\n"
+                    f"Balance: **{fmt_num(new_balance)}** {emoji}"
+                ),
+                color=0xe74c3c
+            )
+        else:
+            # Push (tie)
+            await db.add_chips(gid, uid, interaction.user.display_name, game["bet"])
+            new_balance = await db.get_balance(gid, uid)
+            
+            embed = discord.Embed(
+                title="🃏 Blackjack — Push!",
+                description=(
+                    f"**Dealer:** {bj_hand_display(game['dealer_hand'])}\n"
+                    f"**You:** {bj_hand_display(game['player_hand'])}\n\n"
+                    f"🤝 Both have **{player_value}**! It's a tie.\n\n"
+                    f"Bet returned: **{fmt_num(game['bet'])}** {emoji}\n"
+                    f"Balance: **{fmt_num(new_balance)}** {emoji}"
+                ),
+                color=0xf39c12
+            )
+        
+        await interaction.response.edit_message(embed=embed, view=PlayAgainView(game['original_bet'], "blackjack"))
+    
+    @discord.ui.button(label="🃏 Hit", style=discord.ButtonStyle.primary)
+    async def hit_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        gid, uid = str(interaction.guild_id), str(interaction.user.id)
+        game = _active_games.get((gid, uid))
+        emoji = config.CHIPS["emoji"]
+        
+        # Draw a card
+        deck = game["deck"]
+        if len(deck) < 1:
+            deck = create_deck() + create_deck()
+            random.shuffle(deck)
+            game["deck"] = deck
+        
+        game["player_hand"].append(deck.pop())
+        
+        # Disable double down after first action
+        for item in self.children:
+            if hasattr(item, "custom_id") and item.label == "⬆️ Double":
+                item.disabled = True
+        
+        player_value = bj_hand_value(game["player_hand"])
+        
+        if player_value > 21:
+            await self.player_bust(interaction, game)
+            return
+        
+        if player_value == 21:
+            # Auto-stand on 21
+            await self.dealer_turn(interaction, game)
+            return
+        
+        embed = discord.Embed(
+            title="🃏 Blackjack",
+            description=(
+                f"**Dealer:** {bj_hand_display(game['dealer_hand'], hide_first=True)}\n"
+                f"**You:** {bj_hand_display(game['player_hand'])}\n\n"
+                f"**Hit** to draw another card, or **Stand** to hold."
+            ),
+            color=0x9b59b6
+        )
+        embed.set_footer(text=f"Bet: {fmt_num(game['bet'])} {emoji}")
+        
+        await interaction.response.edit_message(embed=embed, view=self)
+    
+    @discord.ui.button(label="✋ Stand", style=discord.ButtonStyle.secondary)
+    async def stand_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        gid, uid = str(interaction.guild_id), str(interaction.user.id)
+        game = _active_games.get((gid, uid))
+        
+        await self.dealer_turn(interaction, game)
+    
+    @discord.ui.button(label="⬆️ Double", style=discord.ButtonStyle.success)
+    async def double_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        gid, uid = str(interaction.guild_id), str(interaction.user.id)
+        game = _active_games.get((gid, uid))
+        emoji = config.CHIPS["emoji"]
+        
+        # Check if player has enough to double
+        balance = await db.get_balance(gid, uid)
+        if balance < game["bet"]:
+            await interaction.response.send_message(
+                f"❌ Not enough crisps to double! You have **{fmt_num(balance)}** {emoji}",
+                ephemeral=True
+            )
+            return
+        
+        # Deduct additional bet
+        await db.add_chips(gid, uid, interaction.user.display_name, -game["bet"])
+        game["bet"] *= 2
+        game["doubled"] = True
+        
+        # Draw exactly one card
+        deck = game["deck"]
+        if len(deck) < 1:
+            deck = create_deck() + create_deck()
+            random.shuffle(deck)
+            game["deck"] = deck
+        
+        game["player_hand"].append(deck.pop())
+        
+        player_value = bj_hand_value(game["player_hand"])
+        
+        if player_value > 21:
+            await self.player_bust(interaction, game)
+            return
+        
+        # Auto-stand after double
+        await self.dealer_turn(interaction, game)
+
+
 @bot.tree.command(name="gamble", description="Play gambling games to win chips! 🎰")
 @app_commands.describe(game="Choose a game to play")
 @app_commands.choices(
@@ -2209,6 +2596,7 @@ class ShutTheBoxView(discord.ui.View):
         app_commands.Choice(name="🎴 Higher or Lower", value="higher_lower"),
         app_commands.Choice(name="🃏 Video Poker", value="video_poker"),
         app_commands.Choice(name="🎲 Shut the Box", value="shut_the_box"),
+        app_commands.Choice(name="🃏 Blackjack", value="blackjack"),
     ]
 )
 async def gamble_cmd(interaction: discord.Interaction, game: app_commands.Choice[str]):
