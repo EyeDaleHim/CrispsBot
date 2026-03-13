@@ -1130,7 +1130,7 @@ async def auto_start_word_game(gid: str) -> bool:
 
 # ---------- Public ----------
 
-BOT_VERSION = "v2.0.0"
+BOT_VERSION = "v2.0.1"
 
 
 @bot.tree.command(name="version", description="Check bot version (debug)")
@@ -1274,11 +1274,8 @@ def compare_cards(current: tuple, next_card: tuple) -> str:
 
 
 def hl_multiplier(streak: int) -> float:
-    """Calculate payout multiplier based on streak.
-    Starts at 0x, need 5 correct guesses to break even.
-    House has massive edge - treat this like a real casino.
-    """
-    return streak * 0.2
+    """0.25x per correct guess. Break even at 4."""
+    return streak * 0.25
 
 
 # Store active games: {(guild_id, user_id): game_state}
