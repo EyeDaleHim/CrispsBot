@@ -8,6 +8,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 import asyncio
 import random
+import uuid
 import re
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
@@ -1130,7 +1131,7 @@ async def auto_start_word_game(gid: str) -> bool:
 
 # ---------- Public ----------
 
-BOT_VERSION = "v2.3.4"
+BOT_VERSION = "v2.3.5"
 
 
 @bot.tree.command(name="version", description="Check bot version (debug)")
@@ -1379,9 +1380,12 @@ async def start_higher_lower(interaction: discord.Interaction, bet: int, use_fol
     deck = create_deck()
     current = deck.pop()
     
+    game_id = str(uuid.uuid4())
+    
     # Store game state
     _active_games[(gid, uid)] = {
         "type": "higher_lower",
+        "game_id": game_id,
         "deck": deck,
         "current": current,
         "bet": bet,
@@ -1403,7 +1407,7 @@ async def start_higher_lower(interaction: discord.Interaction, bet: int, use_fol
     )
     embed.set_footer(text=f"Bet: {fmt_num(bet)} {emoji}")
     
-    view = HigherLowerView(gid, uid)
+    view = HigherLowerView(gid, uid, game_id)
     if use_followup:
         await interaction.followup.send(embed=embed, view=view)
     else:
@@ -1459,14 +1463,16 @@ class PlayAgainView(discord.ui.View):
 class HigherLowerView(discord.ui.View):
     """Game controls for Higher or Lower."""
     
-    def __init__(self, gid: str, uid: str):
+    def __init__(self, gid: str, uid: str, game_id: str):
         super().__init__(timeout=120)
         self.gid = gid
         self.uid = uid
+        self.game_id = game_id
     
     async def on_timeout(self):
-        # Game expires - clean up
-        if (self.gid, self.uid) in _active_games:
+        # Only delete if this is still the same game (not a new one)
+        game = _active_games.get((self.gid, self.uid))
+        if game and game.get("game_id") == self.game_id:
             del _active_games[(self.gid, self.uid)]
     
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -1722,9 +1728,12 @@ async def start_video_poker(interaction: discord.Interaction, bet: int, use_foll
     deck = create_deck()
     hand = [deck.pop() for _ in range(5)]
     
+    game_id = str(uuid.uuid4())
+    
     # Store game state
     _active_games[(gid, uid)] = {
         "type": "video_poker",
+        "game_id": game_id,
         "deck": deck,
         "hand": hand,
         "held": [False, False, False, False, False],
@@ -1744,7 +1753,7 @@ async def start_video_poker(interaction: discord.Interaction, bet: int, use_foll
     )
     embed.set_footer(text=f"Bet: {fmt_num(bet)} {emoji}")
     
-    view = VideoPokerHoldView(gid, uid)
+    view = VideoPokerHoldView(gid, uid, game_id)
     if use_followup:
         await interaction.followup.send(embed=embed, view=view)
     else:
@@ -1754,13 +1763,15 @@ async def start_video_poker(interaction: discord.Interaction, bet: int, use_foll
 class VideoPokerHoldView(discord.ui.View):
     """View for selecting which cards to hold in Video Poker."""
     
-    def __init__(self, gid: str, uid: str):
+    def __init__(self, gid: str, uid: str, game_id: str):
         super().__init__(timeout=120)
         self.gid = gid
         self.uid = uid
+        self.game_id = game_id
     
     async def on_timeout(self):
-        if (self.gid, self.uid) in _active_games:
+        game = _active_games.get((self.gid, self.uid))
+        if game and game.get("game_id") == self.game_id:
             del _active_games[(self.gid, self.uid)]
     
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -1953,9 +1964,12 @@ async def start_shut_the_box(interaction: discord.Interaction, bet: int, use_fol
     gid, uid = str(interaction.guild_id), str(interaction.user.id)
     emoji = config.CHIPS["emoji"]
     
+    game_id = str(uuid.uuid4())
+    
     # Initial state: all tiles 1-9 open, need to roll
     _active_games[(gid, uid)] = {
         "type": "shut_the_box",
+        "game_id": game_id,
         "tiles": list(range(1, 10)),
         "bet": bet,
         "phase": "roll",  # "roll" or "select"
@@ -1977,7 +1991,7 @@ async def start_shut_the_box(interaction: discord.Interaction, bet: int, use_fol
     )
     embed.set_footer(text=f"Bet: {fmt_num(bet)} {emoji} • Win: {fmt_num(bet * SHUT_THE_BOX_PAYOUT)} {emoji}")
     
-    view = ShutTheBoxView(gid, uid)
+    view = ShutTheBoxView(gid, uid, game_id)
     if use_followup:
         await interaction.followup.send(embed=embed, view=view)
     else:
@@ -1987,13 +2001,15 @@ async def start_shut_the_box(interaction: discord.Interaction, bet: int, use_fol
 class ShutTheBoxView(discord.ui.View):
     """View for Shut the Box game."""
     
-    def __init__(self, gid: str, uid: str):
+    def __init__(self, gid: str, uid: str, game_id: str):
         super().__init__(timeout=180)
         self.gid = gid
         self.uid = uid
+        self.game_id = game_id
     
     async def on_timeout(self):
-        if (self.gid, self.uid) in _active_games:
+        game = _active_games.get((self.gid, self.uid))
+        if game and game.get("game_id") == self.game_id:
             del _active_games[(self.gid, self.uid)]
     
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -2329,8 +2345,10 @@ async def start_blackjack(interaction: discord.Interaction, bet: int, use_follow
     dealer_hand = [deck.pop(), deck.pop()]
     
     # Store game state
+    game_id = str(uuid.uuid4())
     _active_games[(gid, uid)] = {
         "type": "blackjack",
+        "game_id": game_id,
         "deck": deck,
         "player_hand": player_hand,
         "dealer_hand": dealer_hand,
@@ -2418,7 +2436,7 @@ async def start_blackjack(interaction: discord.Interaction, bet: int, use_follow
     )
     embed.set_footer(text=f"Bet: {fmt_num(bet)} {emoji}")
     
-    view = BlackjackView(gid, uid)
+    view = BlackjackView(gid, uid, game_id)
     if use_followup:
         await interaction.followup.send(embed=embed, view=view)
     else:
@@ -2428,13 +2446,15 @@ async def start_blackjack(interaction: discord.Interaction, bet: int, use_follow
 class BlackjackView(discord.ui.View):
     """View for Blackjack game."""
     
-    def __init__(self, gid: str, uid: str):
+    def __init__(self, gid: str, uid: str, game_id: str):
         super().__init__(timeout=120)
         self.gid = gid
         self.uid = uid
+        self.game_id = game_id
     
     async def on_timeout(self):
-        if (self.gid, self.uid) in _active_games:
+        game = _active_games.get((self.gid, self.uid))
+        if game and game.get("game_id") == self.game_id:
             del _active_games[(self.gid, self.uid)]
     
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
