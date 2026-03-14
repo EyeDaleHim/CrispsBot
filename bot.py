@@ -1130,7 +1130,7 @@ async def auto_start_word_game(gid: str) -> bool:
 
 # ---------- Public ----------
 
-BOT_VERSION = "v2.3.2"
+BOT_VERSION = "v2.3.3"
 
 
 @bot.tree.command(name="version", description="Check bot version (debug)")
@@ -1325,7 +1325,7 @@ class BetModal(discord.ui.Modal, title="Place Your Bet!"):
     async def on_submit(self, interaction: discord.Interaction):
         gid, uid = str(interaction.guild_id), str(interaction.user.id)
         
-        # Parse bet amount
+        # Parse bet amount (no DB calls yet, safe to validate first)
         try:
             bet = int(self.bet_input.value.replace(",", "").strip())
         except ValueError:
@@ -1336,11 +1336,14 @@ class BetModal(discord.ui.Modal, title="Place Your Bet!"):
             await interaction.response.send_message("❌ Bet must be greater than 0.", ephemeral=True)
             return
         
+        # Defer immediately before any DB calls to avoid Discord timeout
+        await interaction.response.defer(ephemeral=True)
+        
         # Check balance
         balance = await db.get_balance(gid, uid)
         if bet > balance:
             emoji = config.CHIPS["emoji"]
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"❌ You don't have enough crisps! You have **{fmt_num(balance)}** {emoji}",
                 ephemeral=True
             )
@@ -1348,16 +1351,20 @@ class BetModal(discord.ui.Modal, title="Place Your Bet!"):
         
         # Check for existing game (auto-clears expired ones)
         if check_and_clear_stale_game(gid, uid):
-            await interaction.response.send_message("❌ You already have a game in progress!", ephemeral=True)
+            await interaction.followup.send("❌ You already have a game in progress!", ephemeral=True)
             return
         
         # Deduct bet and start game
         await db.add_chips(gid, uid, interaction.user.display_name, -bet)
         
         if self.game_type == "higher_lower":
-            await start_higher_lower(interaction, bet)
+            await start_higher_lower(interaction, bet, use_followup=True)
         elif self.game_type == "video_poker":
-            await start_video_poker(interaction, bet)
+            await start_video_poker(interaction, bet, use_followup=True)
+        elif self.game_type == "shut_the_box":
+            await start_shut_the_box(interaction, bet, use_followup=True)
+        elif self.game_type == "blackjack":
+            await start_blackjack(interaction, bet, use_followup=True)
         elif self.game_type == "shut_the_box":
             await start_shut_the_box(interaction, bet)
         elif self.game_type == "blackjack":
@@ -1416,13 +1423,16 @@ class PlayAgainView(discord.ui.View):
         gid, uid = str(interaction.guild_id), str(interaction.user.id)
         emoji = config.CHIPS["emoji"]
         
+        # Defer immediately before any DB calls
+        await interaction.response.defer()
+        
         if check_and_clear_stale_game(gid, uid):
-            await interaction.response.send_message("❌ You already have a game in progress!", ephemeral=True)
+            await interaction.followup.send("❌ You already have a game in progress!", ephemeral=True)
             return
         
         balance = await db.get_balance(gid, uid)
         if self.bet > balance:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"❌ Not enough crisps! You have **{fmt_num(balance)}** {emoji}",
                 ephemeral=True
             )
@@ -1430,7 +1440,7 @@ class PlayAgainView(discord.ui.View):
         
         await db.add_chips(gid, uid, interaction.user.display_name, -self.bet)
         self.disable_all()
-        await interaction.response.edit_message(view=self)
+        await interaction.edit_original_response(view=self)
         
         if self.game_type == "video_poker":
             await start_video_poker(interaction, self.bet, use_followup=True)
@@ -1482,6 +1492,8 @@ class HigherLowerView(discord.ui.View):
             await interaction.response.send_message("❌ No active game found.", ephemeral=True)
             return
         
+        await interaction.response.defer()
+        
         emoji = config.CHIPS["emoji"]
         deck = game["deck"]
         current = game["current"]
@@ -1511,7 +1523,7 @@ class HigherLowerView(discord.ui.View):
                 color=0xf39c12
             )
             embed.set_footer(text=f"Bet: {fmt_num(game['bet'])} {emoji}")
-            await interaction.response.edit_message(embed=embed, view=self)
+            await interaction.edit_original_response(embed=embed, view=self)
         
         elif guess == result:
             # Correct guess!
@@ -1530,7 +1542,7 @@ class HigherLowerView(discord.ui.View):
                 color=0x3498db
             )
             embed.set_footer(text=f"Bet: {fmt_num(game['bet'])} {emoji}")
-            await interaction.response.edit_message(embed=embed, view=self)
+            await interaction.edit_original_response(embed=embed, view=self)
         
         else:
             # Wrong guess
@@ -1580,7 +1592,7 @@ class HigherLowerView(discord.ui.View):
                 )
             
             self.disable_all()
-            await interaction.response.edit_message(embed=embed, view=PlayAgainView(game["bet"], "higher_lower"))
+            await interaction.edit_original_response(embed=embed, view=PlayAgainView(game["bet"], "higher_lower"))
     
     def disable_all(self):
         for item in self.children:
@@ -1815,6 +1827,8 @@ class VideoPokerHoldView(discord.ui.View):
         game = _active_games.get((gid, uid))
         emoji = config.CHIPS["emoji"]
         
+        await interaction.response.defer()
+        
         # Replace non-held cards
         deck = game["deck"]
         hand = game["hand"]
@@ -1868,7 +1882,7 @@ class VideoPokerHoldView(discord.ui.View):
                 color=0xe74c3c
             )
         
-        await interaction.response.edit_message(embed=embed, view=PlayAgainView(game["bet"], "video_poker"))
+        await interaction.edit_original_response(embed=embed, view=PlayAgainView(game["bet"], "video_poker"))
 
 
 # ======================== SHUT THE BOX ========================
@@ -2070,6 +2084,8 @@ class ShutTheBoxView(discord.ui.View):
         if game["phase"] != "select":
             return
         
+        await interaction.response.defer()
+        
         if tile in game["selected"]:
             game["selected"].remove(tile)
         else:
@@ -2098,7 +2114,7 @@ class ShutTheBoxView(discord.ui.View):
             if hasattr(item, "custom_id") and item.custom_id == "confirm_shut":
                 item.disabled = selected_sum != dice_total
         
-        await interaction.response.edit_message(embed=embed, view=self)
+        await interaction.edit_original_response(embed=embed, view=self)
     
     @discord.ui.button(label="🎲 Roll Dice", style=discord.ButtonStyle.success, custom_id="roll_dice", row=2)
     async def roll_dice_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -2109,6 +2125,8 @@ class ShutTheBoxView(discord.ui.View):
         if game["phase"] != "roll":
             await interaction.response.send_message("❌ You need to select tiles first!", ephemeral=True)
             return
+        
+        await interaction.response.defer()
         
         # Roll 1 die if remaining sum <= 6, else 2 dice
         remaining_sum = sum(game["tiles"])
@@ -2142,7 +2160,7 @@ class ShutTheBoxView(discord.ui.View):
                 color=0xe74c3c
             )
             
-            await interaction.response.edit_message(embed=embed, view=PlayAgainView(game["bet"], "shut_the_box"))
+            await interaction.edit_original_response(embed=embed, view=PlayAgainView(game["bet"], "shut_the_box"))
             return
         
         # Move to select phase
@@ -2172,7 +2190,7 @@ class ShutTheBoxView(discord.ui.View):
         )
         embed.set_footer(text=f"Bet: {fmt_num(game['bet'])} {emoji}")
         
-        await interaction.response.edit_message(embed=embed, view=self)
+        await interaction.edit_original_response(embed=embed, view=self)
     
     @discord.ui.button(label="✓ Shut Tiles", style=discord.ButtonStyle.secondary, custom_id="confirm_shut", disabled=True, row=2)
     async def confirm_shut_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -2183,9 +2201,11 @@ class ShutTheBoxView(discord.ui.View):
         if game["phase"] != "select":
             return
         
+        await interaction.response.defer()
+        
         # Verify selection sums to dice total
         if sum(game["selected"]) != game["dice_total"]:
-            await interaction.response.send_message("❌ Selection must sum to dice roll!", ephemeral=True)
+            await interaction.followup.send("❌ Selection must sum to dice roll!", ephemeral=True)
             return
         
         # Shut the selected tiles
@@ -2215,7 +2235,7 @@ class ShutTheBoxView(discord.ui.View):
                 color=0x2ecc71
             )
             
-            await interaction.response.edit_message(embed=embed, view=PlayAgainView(game["bet"], "shut_the_box"))
+            await interaction.edit_original_response(embed=embed, view=PlayAgainView(game["bet"], "shut_the_box"))
             return
         
         # Back to roll phase
@@ -2245,7 +2265,7 @@ class ShutTheBoxView(discord.ui.View):
         )
         embed.set_footer(text=f"Bet: {fmt_num(game['bet'])} {emoji} • Win: {fmt_num(game['bet'] * SHUT_THE_BOX_PAYOUT)} {emoji}")
         
-        await interaction.response.edit_message(embed=embed, view=self)
+        await interaction.edit_original_response(embed=embed, view=self)
 
 
 # ======================== BLACKJACK ========================
@@ -2440,7 +2460,7 @@ class BlackjackView(discord.ui.View):
             color=0xe74c3c
         )
         
-        await interaction.response.edit_message(embed=embed, view=PlayAgainView(game['original_bet'], "blackjack"))
+        await interaction.edit_original_response(embed=embed, view=PlayAgainView(game['original_bet'], "blackjack"))
     
     async def dealer_turn(self, interaction: discord.Interaction, game: dict):
         """Handle dealer's turn and resolve game."""
@@ -2528,12 +2548,14 @@ class BlackjackView(discord.ui.View):
                 color=0xf39c12
             )
         
-        await interaction.response.edit_message(embed=embed, view=PlayAgainView(game['original_bet'], "blackjack"))
+        await interaction.edit_original_response(embed=embed, view=PlayAgainView(game['original_bet'], "blackjack"))
     
     @discord.ui.button(label="🃏 Hit", style=discord.ButtonStyle.primary)
     async def hit_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
         game = _active_games.get((self.gid, self.uid))
         emoji = config.CHIPS["emoji"]
+        
+        await interaction.response.defer()
         
         # Draw a card
         deck = game["deck"]
@@ -2571,12 +2593,13 @@ class BlackjackView(discord.ui.View):
         )
         embed.set_footer(text=f"Bet: {fmt_num(game['bet'])} {emoji}")
         
-        await interaction.response.edit_message(embed=embed, view=self)
+        await interaction.edit_original_response(embed=embed, view=self)
     
     @discord.ui.button(label="✋ Stand", style=discord.ButtonStyle.secondary)
     async def stand_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
         game = _active_games.get((self.gid, self.uid))
         
+        await interaction.response.defer()
         await self.dealer_turn(interaction, game)
     
     @discord.ui.button(label="⬆️ Double", style=discord.ButtonStyle.success)
@@ -2584,10 +2607,12 @@ class BlackjackView(discord.ui.View):
         game = _active_games.get((self.gid, self.uid))
         emoji = config.CHIPS["emoji"]
         
+        await interaction.response.defer()
+        
         # Check if player has enough to double
         balance = await db.get_balance(self.gid, self.uid)
         if balance < game["bet"]:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 f"❌ Not enough crisps to double! You have **{fmt_num(balance)}** {emoji}",
                 ephemeral=True
             )
