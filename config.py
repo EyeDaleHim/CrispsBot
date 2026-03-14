@@ -8,7 +8,7 @@ Edit this file to customize the bot's behavior and content.
 TIMEZONE = "Asia/Manila"
 
 # Chatter reward time (Manila time). Daily questions use auto-rotation (24h / question count).
-CHATTER_SCHEDULE = {"hour": 23, "minute": 59}
+CHATTER_SCHEDULE = {"hour": 11, "minute": 59}
 
 CHIPS = {
     "name": "chips",

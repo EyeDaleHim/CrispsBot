@@ -709,8 +709,9 @@ async def do_chatter_rewards(guild_id: str):
     if not channel:
         return
 
-    today = datetime.now(MANILA_TZ).date().isoformat()
-    chatters = await db.get_top_chatters(guild_id, today)
+    # Reward YESTERDAY's chatters (since rewards fire in the morning)
+    yesterday = (datetime.now(MANILA_TZ) - timedelta(days=1)).date().isoformat()
+    chatters = await db.get_top_chatters(guild_id, yesterday)
     emoji = config.CHIPS["emoji"]
     
     rewards = [
@@ -726,7 +727,7 @@ async def do_chatter_rewards(guild_id: str):
 
     if not chatters:
         await channel.send(config.MESSAGES["chatter_reward"]["no_activity"])
-        await db.clear_daily_chatter(guild_id, today)
+        await db.clear_daily_chatter(guild_id, yesterday)
         return
 
     lines = [config.MESSAGES["chatter_reward"]["announcement"]]
@@ -745,7 +746,7 @@ async def do_chatter_rewards(guild_id: str):
         )
 
     await channel.send("\n".join(lines))
-    await db.clear_daily_chatter(guild_id, today)
+    await db.clear_daily_chatter(guild_id, yesterday)
     await db.set_state(guild_id, "last_chatter_post", datetime.now(timezone.utc).isoformat())
 
 
@@ -758,8 +759,9 @@ async def do_activity_rewards(guild_id: str):
     if not channel:
         return
 
-    today = datetime.now(MANILA_TZ).date().isoformat()
-    top_activity = await db.get_top_activity(guild_id, today)
+    # Reward YESTERDAY's activity (since rewards fire in the morning)
+    yesterday = (datetime.now(MANILA_TZ) - timedelta(days=1)).date().isoformat()
+    top_activity = await db.get_top_activity(guild_id, yesterday)
     emoji = config.CHIPS["emoji"]
     
     rewards = [
@@ -775,7 +777,7 @@ async def do_activity_rewards(guild_id: str):
 
     if not top_activity:
         await channel.send(config.MESSAGES["activity_rewards"]["no_activity"])
-        await db.clear_daily_activity(guild_id, today)
+        await db.clear_daily_activity(guild_id, yesterday)
         return
 
     lines = [config.MESSAGES["activity_rewards"]["announcement"]]
@@ -794,7 +796,7 @@ async def do_activity_rewards(guild_id: str):
         )
 
     await channel.send("\n".join(lines))
-    await db.clear_daily_activity(guild_id, today)
+    await db.clear_daily_activity(guild_id, yesterday)
     await db.set_state(guild_id, "last_activity_post", datetime.now(timezone.utc).isoformat())
 
 
@@ -1166,7 +1168,7 @@ async def auto_start_word_game(gid: str) -> bool:
 
 # ---------- Public ----------
 
-BOT_VERSION = "v2.4.0"
+BOT_VERSION = "v2.5.0"
 
 
 @bot.tree.command(name="version", description="Check bot version (debug)")
@@ -1176,18 +1178,20 @@ async def version_cmd(interaction: discord.Interaction):
 
 @bot.tree.command(name="balance", description="Check your chip balance 🥔")
 async def balance_cmd(interaction: discord.Interaction):
+    await interaction.response.defer()
+    
     gid, uid = str(interaction.guild_id), str(interaction.user.id)
     bal = await db.get_balance(gid, uid)
     rank = await db.get_rank(gid, uid)
 
     if bal == 0:
-        await interaction.response.send_message(config.MESSAGES["balance"]["no_balance"])
+        await interaction.followup.send(config.MESSAGES["balance"]["no_balance"])
     else:
         rank_str = f"#{rank}" if rank else config.MESSAGES["balance"]["unranked"]
         msg = config.MESSAGES["balance"]["response"].format(
             amount=fmt_num(bal), emoji=config.CHIPS["emoji"], rank=rank_str
         )
-        await interaction.response.send_message(msg)
+        await interaction.followup.send(msg)
 
 
 @bot.tree.command(name="donate", description="Give your chips to another user 🥔")
@@ -1213,10 +1217,13 @@ async def donate_cmd(interaction: discord.Interaction, user: discord.Member, amo
         await interaction.response.send_message("❌ Amount must be greater than 0!", ephemeral=True)
         return
     
+    # Defer before DB calls
+    await interaction.response.defer()
+    
     # Check donor's balance
     donor_balance = await db.get_balance(gid, donor_uid)
     if amount > donor_balance:
-        await interaction.response.send_message(
+        await interaction.followup.send(
             f"❌ You don't have enough chips! You have **{fmt_num(donor_balance)}** {emoji}",
             ephemeral=True
         )
@@ -1228,7 +1235,7 @@ async def donate_cmd(interaction: discord.Interaction, user: discord.Member, amo
     
     new_donor_balance = await db.get_balance(gid, donor_uid)
     
-    await interaction.response.send_message(
+    await interaction.followup.send(
         f"🎁 **{interaction.user.display_name}** donated **{fmt_num(amount)}** {emoji} to **{user.display_name}**!\n"
         f"Your new balance: **{fmt_num(new_donor_balance)}** {emoji}"
     )
@@ -1236,6 +1243,8 @@ async def donate_cmd(interaction: discord.Interaction, user: discord.Member, amo
 
 @bot.tree.command(name="chipleaderboard", description="View the server chip leaderboard 🏆")
 async def leaderboard_cmd(interaction: discord.Interaction):
+    await interaction.response.defer()
+    
     gid, uid = str(interaction.guild_id), str(interaction.user.id)
     entries = await db.get_leaderboard(gid, 10)
 
@@ -1245,7 +1254,7 @@ async def leaderboard_cmd(interaction: discord.Interaction):
             description="No one has earned chips yet! Be the first! 🥔",
             color=int(config.COLORS["leaderboard"], 16),
         )
-        await interaction.response.send_message(embed=embed)
+        await interaction.followup.send(embed=embed)
         return
 
     rank_emojis = config.EMBEDS["leaderboard"]["rank_emojis"]
@@ -1278,7 +1287,7 @@ async def leaderboard_cmd(interaction: discord.Interaction):
             ),
         )
 
-    await interaction.response.send_message(embed=embed)
+    await interaction.followup.send(embed=embed)
 
 # ---------- Admin ----------
 
@@ -1287,9 +1296,11 @@ async def leaderboard_cmd(interaction: discord.Interaction):
 @app_commands.default_permissions(administrator=True)
 @app_commands.describe(user="The user", amount="The amount to set")
 async def chips_cmd(interaction: discord.Interaction, user: discord.Member, amount: int):
+    await interaction.response.defer(ephemeral=True)
+    
     gid = str(interaction.guild_id)
     await db.set_chips(gid, str(user.id), user.display_name, amount)
-    await interaction.response.send_message(
+    await interaction.followup.send(
         f"Set {user.mention}'s chips to **{fmt_num(amount)} {config.CHIPS['emoji']}**", ephemeral=True
     )
 
@@ -2951,28 +2962,32 @@ async def on_message(message: discord.Message):
     gid = str(message.guild.id)
     uid = str(message.author.id)
 
-    await db.set_state(gid, "last_message_time", datetime.now(timezone.utc).isoformat())
-    await db.set_state(gid, "last_message_channel", str(message.channel.id))
-    
-    now = datetime.now(timezone.utc)
-    last_msg_key = f"user_last_msg_{uid}"
-    last_msg_time = await db.get_state(gid, last_msg_key)
-    
-    is_spam = False
-    if last_msg_time:
-        last_dt = datetime.fromisoformat(last_msg_time)
-        if last_dt.tzinfo is None:
-            last_dt = last_dt.replace(tzinfo=timezone.utc)
-        if (now - last_dt).total_seconds() < 3:
-            is_spam = True
-    
-    # Update user's last message time
-    await db.set_state(gid, last_msg_key, now.isoformat())
-    
-    # Only count for rewards if not spam
-    if not is_spam:
-        await db.increment_chatter(gid, uid, message.author.display_name)
-        await db.increment_activity_message(gid, uid, message.author.display_name)
+    # Track activity and chatter with error handling (don't let DB issues block message processing)
+    try:
+        await db.set_state(gid, "last_message_time", datetime.now(timezone.utc).isoformat())
+        await db.set_state(gid, "last_message_channel", str(message.channel.id))
+        
+        now = datetime.now(timezone.utc)
+        last_msg_key = f"user_last_msg_{uid}"
+        last_msg_time = await db.get_state(gid, last_msg_key)
+        
+        is_spam = False
+        if last_msg_time:
+            last_dt = datetime.fromisoformat(last_msg_time)
+            if last_dt.tzinfo is None:
+                last_dt = last_dt.replace(tzinfo=timezone.utc)
+            if (now - last_dt).total_seconds() < 3:
+                is_spam = True
+        
+        # Update user's last message time
+        await db.set_state(gid, last_msg_key, now.isoformat())
+        
+        # Only count for rewards if not spam
+        if not is_spam:
+            await db.increment_chatter(gid, uid, message.author.display_name)
+            await db.increment_activity_message(gid, uid, message.author.display_name)
+    except Exception as e:
+        print(f"[on_message] DB error tracking activity: {e}")
 
     # --- Haiku Detection ---
     is_haiku, haiku_lines = check_haiku(message.content)
