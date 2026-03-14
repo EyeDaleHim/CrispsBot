@@ -835,6 +835,41 @@ async def schedule_loop():
         #                 except Exception as e:
         #                     print(f"Error posting {qtype}: {e}")
 
+        # --- Alternating Daily Question (12:00 PM Manila) ---
+        # Day 1: Casual, Day 2: Typology, Day 1: Casual, etc.
+        if now_manila.hour == 12 and now_manila.minute == 0:
+            last_iso = await db.get_state(gid, "last_daily_question")
+            should_post = True
+            if last_iso:
+                last_dt = datetime.fromisoformat(last_iso)
+                if last_dt.tzinfo is None:
+                    last_dt = last_dt.replace(tzinfo=timezone.utc)
+                hours_since = (now_utc - last_dt).total_seconds() / 3600
+                if hours_since < 23:
+                    should_post = False
+            
+            if should_post:
+                await db.set_state(gid, "last_daily_question", now_utc.isoformat())
+                
+                # Check which one to post (alternate based on counter)
+                counter_str = await db.get_state(gid, "daily_question_toggle") or "0"
+                counter = int(counter_str)
+                
+                try:
+                    if counter % 2 == 0:
+                        # Even = Casual
+                        await post_casual(gid)
+                        print(f"[Schedule] Posted CASUAL question for guild {gid}")
+                    else:
+                        # Odd = Typology
+                        await post_typology(gid)
+                        print(f"[Schedule] Posted TYPOLOGY question for guild {gid}")
+                    
+                    # Increment counter for next day
+                    await db.set_state(gid, "daily_question_toggle", str(counter + 1))
+                except Exception as e:
+                    print(f"Error posting daily question: {e}")
+
         # --- Chatter Rewards (fixed Manila time) ---
         sched = config.CHATTER_SCHEDULE
         if now_manila.hour == sched["hour"] and now_manila.minute == sched["minute"]:
@@ -1131,7 +1166,7 @@ async def auto_start_word_game(gid: str) -> bool:
 
 # ---------- Public ----------
 
-BOT_VERSION = "v2.3.5"
+BOT_VERSION = "v2.4.0"
 
 
 @bot.tree.command(name="version", description="Check bot version (debug)")
@@ -1153,6 +1188,50 @@ async def balance_cmd(interaction: discord.Interaction):
             amount=fmt_num(bal), emoji=config.CHIPS["emoji"], rank=rank_str
         )
         await interaction.response.send_message(msg)
+
+
+@bot.tree.command(name="donate", description="Give your chips to another user 🥔")
+@app_commands.describe(user="The user to donate chips to", amount="Amount of chips to donate")
+async def donate_cmd(interaction: discord.Interaction, user: discord.Member, amount: int):
+    gid = str(interaction.guild_id)
+    donor_uid = str(interaction.user.id)
+    recipient_uid = str(user.id)
+    emoji = config.CHIPS["emoji"]
+    
+    # Can't donate to yourself
+    if donor_uid == recipient_uid:
+        await interaction.response.send_message("❌ You can't donate to yourself!", ephemeral=True)
+        return
+    
+    # Can't donate to bots
+    if user.bot:
+        await interaction.response.send_message("❌ You can't donate to bots!", ephemeral=True)
+        return
+    
+    # Must be positive
+    if amount <= 0:
+        await interaction.response.send_message("❌ Amount must be greater than 0!", ephemeral=True)
+        return
+    
+    # Check donor's balance
+    donor_balance = await db.get_balance(gid, donor_uid)
+    if amount > donor_balance:
+        await interaction.response.send_message(
+            f"❌ You don't have enough chips! You have **{fmt_num(donor_balance)}** {emoji}",
+            ephemeral=True
+        )
+        return
+    
+    # Transfer chips
+    await db.add_chips(gid, donor_uid, interaction.user.display_name, -amount)
+    await db.add_chips(gid, recipient_uid, user.display_name, amount)
+    
+    new_donor_balance = await db.get_balance(gid, donor_uid)
+    
+    await interaction.response.send_message(
+        f"🎁 **{interaction.user.display_name}** donated **{fmt_num(amount)}** {emoji} to **{user.display_name}**!\n"
+        f"Your new balance: **{fmt_num(new_donor_balance)}** {emoji}"
+    )
 
 
 @bot.tree.command(name="chipleaderboard", description="View the server chip leaderboard 🏆")
