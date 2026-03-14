@@ -1130,7 +1130,7 @@ async def auto_start_word_game(gid: str) -> bool:
 
 # ---------- Public ----------
 
-BOT_VERSION = "v2.3.1"
+BOT_VERSION = "v2.3.2"
 
 
 @bot.tree.command(name="version", description="Check bot version (debug)")
@@ -1283,6 +1283,30 @@ def hl_multiplier(streak: int) -> float:
 # Store active games: {(guild_id, user_id): game_state}
 _active_games: dict[tuple[str, str], dict] = {}
 
+# Game timeout in seconds (longest view timeout is 180s for Shut the Box)
+GAME_EXPIRY_SECONDS = 180
+
+
+def check_and_clear_stale_game(gid: str, uid: str) -> bool:
+    """Check if user has an active game. Auto-clears if expired. Returns True if game exists and is valid."""
+    game = _active_games.get((gid, uid))
+    if not game:
+        return False
+    
+    created_at = game.get("created_at")
+    if not created_at:
+        # Old game without timestamp - clear it
+        del _active_games[(gid, uid)]
+        return False
+    
+    elapsed = (datetime.now(timezone.utc) - created_at).total_seconds()
+    if elapsed > GAME_EXPIRY_SECONDS:
+        # Expired - clear it
+        del _active_games[(gid, uid)]
+        return False
+    
+    return True
+
 
 class BetModal(discord.ui.Modal, title="Place Your Bet!"):
     """Modal to enter bet amount."""
@@ -1322,8 +1346,8 @@ class BetModal(discord.ui.Modal, title="Place Your Bet!"):
             )
             return
         
-        # Check for existing game
-        if (gid, uid) in _active_games:
+        # Check for existing game (auto-clears expired ones)
+        if check_and_clear_stale_game(gid, uid):
             await interaction.response.send_message("❌ You already have a game in progress!", ephemeral=True)
             return
         
@@ -1355,6 +1379,7 @@ async def start_higher_lower(interaction: discord.Interaction, bet: int, use_fol
         "current": current,
         "bet": bet,
         "streak": 0,
+        "created_at": datetime.now(timezone.utc),
     }
     
     multiplier = hl_multiplier(0)
@@ -1391,7 +1416,7 @@ class PlayAgainView(discord.ui.View):
         gid, uid = str(interaction.guild_id), str(interaction.user.id)
         emoji = config.CHIPS["emoji"]
         
-        if (gid, uid) in _active_games:
+        if check_and_clear_stale_game(gid, uid):
             await interaction.response.send_message("❌ You already have a game in progress!", ephemeral=True)
             return
         
@@ -1688,6 +1713,7 @@ async def start_video_poker(interaction: discord.Interaction, bet: int, use_foll
         "held": [False, False, False, False, False],
         "bet": bet,
         "phase": "hold",  # "hold" or "done"
+        "created_at": datetime.now(timezone.utc),
     }
     
     embed = discord.Embed(
@@ -1916,6 +1942,7 @@ async def start_shut_the_box(interaction: discord.Interaction, bet: int, use_fol
         "dice_rolls": [],
         "selected": [],
         "combinations": [],
+        "created_at": datetime.now(timezone.utc),
     }
     
     embed = discord.Embed(
@@ -2281,6 +2308,7 @@ async def start_blackjack(interaction: discord.Interaction, bet: int, use_follow
         "bet": bet,
         "original_bet": bet,
         "doubled": False,
+        "created_at": datetime.now(timezone.utc),
     }
     
     # Check for blackjacks
@@ -2602,8 +2630,8 @@ class BlackjackView(discord.ui.View):
 async def gamble_cmd(interaction: discord.Interaction, game: app_commands.Choice[str]):
     gid, uid = str(interaction.guild_id), str(interaction.user.id)
     
-    # Check for existing game
-    if (gid, uid) in _active_games:
+    # Check for existing game (auto-clears expired ones)
+    if check_and_clear_stale_game(gid, uid):
         await interaction.response.send_message(
             "❌ You already have a game in progress! Finish it first.",
             ephemeral=True
