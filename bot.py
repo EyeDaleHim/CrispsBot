@@ -16,6 +16,7 @@ from typing import Optional
 import os
 import yaml
 from pathlib import Path
+from collections import deque
 
 from dotenv import load_dotenv
 import config
@@ -51,6 +52,8 @@ HARDCODED["blacklist_channels"] = settings_data["blacklist_channels"]
 
 # Hall of Fame: track which messages have been forwarded (in-memory cache)
 _hall_of_fame_forwarded: set[int] = set()
+_hall_of_fame_order: deque[int] = deque()
+HOF_CACHE_MAX = 2000
 
 
 def fmt_num(n: int) -> str:
@@ -263,6 +266,14 @@ def format_story(words_str: str) -> str:
     if story:
         story = story[0].upper() + story[1:]
     return story
+
+def _hof_mark_forwarded(msg_id: int):
+    if msg_id not in _hall_of_fame_forwarded:
+        _hall_of_fame_forwarded.add(msg_id)
+        _hall_of_fame_order.append(msg_id)
+        if len(_hall_of_fame_order) > HOF_CACHE_MAX:
+            evicted = _hall_of_fame_order.popleft()
+            _hall_of_fame_forwarded.discard(evicted)
 
 
 # ======================== TYPOLOGY FORMATTING ========================
@@ -812,62 +823,33 @@ async def schedule_loop():
     for guild in bot.guilds:
         gid = str(guild.id)
 
-        # DISABLED: Automatic QOTD and typology posting
-        # for qtype, sched in QUESTION_SCHEDULES.items():
-        #     if now_manila.hour == sched["hour"] and now_manila.minute == sched["minute"]:
-        #         # Check if already posted recently (within 23 hours) - prevents race conditions
-        #         last_iso = await db.get_state(gid, f"last_{qtype}_question")
-        #         should_post = True
-        #         if last_iso:
-        #             last_dt = datetime.fromisoformat(last_iso)
-        #             if last_dt.tzinfo is None:
-        #                 last_dt = last_dt.replace(tzinfo=timezone.utc)
-        #             hours_since = (now_utc - last_dt).total_seconds() / 3600
-        #             if hours_since < 23:  # Posted within last 23 hours = skip
-        #                 should_post = False
-        #         
-        #         if should_post:
-        #             await db.set_state(gid, f"last_{qtype}_question", now_utc.isoformat())
-        #             
-        #             post_fn = QUESTION_POST_FNS.get(qtype)
-        #             if post_fn:
-        #                 try:
-        #                     await post_fn(gid)
-        #                     print(f"[Schedule] Posted {qtype} question for guild {gid}")
-        #                 except Exception as e:
-        #                     print(f"Error posting {qtype}: {e}")
+        state_keys = [
+            "last_daily_question", 
+            "daily_question_toggle", 
+            "last_chatter_post", 
+            "last_activity_post"
+        ]
+        states = await db.get_states(gid, state_keys)
+
 
         # --- Alternating Daily Question (12:00 PM Manila) ---
         # Day 1: Casual, Day 2: Typology, Day 1: Casual, etc.
         if now_manila.hour == 12 and now_manila.minute == 0:
-            last_iso = await db.get_state(gid, "last_daily_question")
+            last_iso = states.get("last_daily_question")
             should_post = True
             if last_iso:
-                last_dt = datetime.fromisoformat(last_iso)
-                if last_dt.tzinfo is None:
-                    last_dt = last_dt.replace(tzinfo=timezone.utc)
-                hours_since = (now_utc - last_dt).total_seconds() / 3600
-                if hours_since < 23:
+                last_dt = datetime.fromisoformat(last_iso).replace(tzinfo=timezone.utc)
+                if (now_utc - last_dt).total_seconds() / 3600 < 23:
                     should_post = False
             
             if should_post:
                 await db.set_state(gid, "last_daily_question", now_utc.isoformat())
-                
-                # Check which one to post (alternate based on counter)
-                counter_str = await db.get_state(gid, "daily_question_toggle") or "0"
-                counter = int(counter_str)
-                
+                counter = int(states.get("daily_question_toggle") or "0")
                 try:
-                    if counter % 2 == 0:
-                        # Even = Casual
+                    if counter % 2 == 0: # Even = Casual
                         await post_casual(gid)
-                        print(f"[Schedule] Posted CASUAL question for guild {gid}")
-                    else:
-                        # Odd = Typology
+                    else: # Odd = Typology
                         await post_typology(gid)
-                        print(f"[Schedule] Posted TYPOLOGY question for guild {gid}")
-                    
-                    # Increment counter for next day
                     await db.set_state(gid, "daily_question_toggle", str(counter + 1))
                 except Exception as e:
                     print(f"Error posting daily question: {e}")
@@ -875,14 +857,11 @@ async def schedule_loop():
         # --- Chatter Rewards (fixed Manila time) ---
         sched = config.CHATTER_SCHEDULE
         if now_manila.hour == sched["hour"] and now_manila.minute == sched["minute"]:
-            last = await db.get_state(gid, "last_chatter_post")
+            last = states.get("last_chatter_post")
             should_post = True
             if last:
-                ld = datetime.fromisoformat(last)
-                if ld.tzinfo is None:
-                    ld = ld.replace(tzinfo=timezone.utc)
-                hours_since = (now_utc - ld).total_seconds() / 3600
-                if hours_since < 23:  # Posted within last 23 hours = skip
+                ld = datetime.fromisoformat(last).replace(tzinfo=timezone.utc)
+                if (now_utc - ld).total_seconds() / 3600 < 23: # Period within last 23 hours = Skip
                     should_post = False
             if should_post:
                 await db.set_state(gid, "last_chatter_post", now_utc.isoformat())
@@ -891,17 +870,15 @@ async def schedule_loop():
                 except Exception as e:
                     print(f"Error doing chatter rewards: {e}")
 
+        # --- Activity Rewards ---
         act_sched = config.ACTIVITY_REWARDS
         if now_manila.hour == act_sched["hour"] and now_manila.minute == act_sched["minute"]:
             if config.FEATURES.get("activity_rewards"):
-                last = await db.get_state(gid, "last_activity_post")
+                last = states.get("last_activity_post")
                 should_post = True
                 if last:
-                    ld = datetime.fromisoformat(last)
-                    if ld.tzinfo is None:
-                        ld = ld.replace(tzinfo=timezone.utc)
-                    hours_since = (now_utc - ld).total_seconds() / 3600
-                    if hours_since < 23:
+                    ld = datetime.fromisoformat(last).replace(tzinfo=timezone.utc)
+                    if (now_utc - ld).total_seconds() / 3600 < 23:
                         should_post = False
                 if should_post:
                     await db.set_state(gid, "last_activity_post", now_utc.isoformat())
