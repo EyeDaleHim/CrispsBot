@@ -28,48 +28,40 @@ else:
 
 # ==================== CONNECTION WRAPPER ====================
 
+class TursoCursor:
+    """Independent cursor wrapper for thread-safe reads."""
+    def __init__(self, cursor):
+        self._cursor = cursor
+    
+    async def fetchone(self):
+        return await asyncio.to_thread(self._cursor.fetchone)
+    
+    async def fetchall(self):
+        return await asyncio.to_thread(self._cursor.fetchall)
+
 class TursoConnection:
     """Wrapper to make libsql work like aiosqlite"""
     def __init__(self, conn):
         self._conn = conn
-        self._cursor = None
+        self._lock = asyncio.Lock()  # Serialize writes/access to the shared connection
     
     async def execute(self, sql, params=None):
         def _exec():
-            if params:
-                return self._conn.execute(sql, params)
-            return self._conn.execute(sql)
-        result = await asyncio.to_thread(_exec)
-        self._cursor = result
-        return self
+            return self._conn.execute(sql, params or [])
+        async with self._lock:
+            result = await asyncio.to_thread(_exec)
+        return TursoCursor(result)
     
     async def executescript(self, sql):
-        def _exec():
-            return self._conn.executescript(sql)
-        await asyncio.to_thread(_exec)
-        return self
-    
-    async def fetchone(self):
-        if self._cursor is None:
-            return None
-        def _fetch():
-            return self._cursor.fetchone()
-        return await asyncio.to_thread(_fetch)
-    
-    async def fetchall(self):
-        if self._cursor is None:
-            return []
-        def _fetch():
-            return self._cursor.fetchall()
-        return await asyncio.to_thread(_fetch)
+        async with self._lock:
+            await asyncio.to_thread(self._conn.executescript, sql)
     
     async def commit(self):
-        def _commit():
-            self._conn.commit()
-        await asyncio.to_thread(_commit)
+        async with self._lock:
+            await asyncio.to_thread(self._conn.commit)
     
     async def close(self):
-        pass  # Turso connections are reused, don't close
+        pass # Turso connections are reused, don't close
 
 
 # Global persistent connection for Turso
@@ -108,6 +100,11 @@ async def get_connection():
 async def init():
     """Create all tables if they don't exist"""
     async with get_connection() as conn:
+        # For local development
+        if not USE_TURSO:
+            await conn.execute("PRAGMA journal_mode=WAL")
+            await conn.execute("PRAGMA synchronous=NORMAL")
+
         await conn.executescript("""
             CREATE TABLE IF NOT EXISTS users (
                 guild_id TEXT NOT NULL,
@@ -194,7 +191,6 @@ async def init():
         """)
         await conn.commit()
         
-        # Migrations (safe to run multiple times)
         migrations = [
             "UPDATE bot_state SET key = 'channel_casual' WHERE key = 'channel_spark'",
             "UPDATE question_usage SET question_type = 'casual' WHERE question_type = 'spark'",
@@ -204,8 +200,7 @@ async def init():
             "UPDATE bot_state SET key = 'channel_chill' WHERE key = 'channel_personality'",
             "UPDATE bot_state SET key = 'ping_role_chill' WHERE key = 'ping_role_personality'",
             "UPDATE bot_state SET key = 'role_picker_message_chill' WHERE key = 'role_picker_message_personality'",
-            # v2: Clear old index-based question data (now text-based) - only affects old integer entries
-            """DELETE FROM question_usage WHERE typeof(question_index) = 'integer'""",
+            "DELETE FROM question_usage WHERE typeof(question_index) = 'integer'",
         ]
         for sql in migrations:
             await conn.execute(sql)
@@ -382,6 +377,31 @@ async def set_state(guild_id: str, key: str, value: str):
         )
         await conn.commit()
 
+async def get_states(guild_id: str, keys: list[str]) -> dict[str, str | None]:
+    """Fetch multiple state values in a single database roundtrip."""
+    placeholders = ",".join("?" * len(keys))
+    async with get_connection() as conn:
+        cursor = await conn.execute(
+            f"SELECT key, value FROM bot_state WHERE guild_id = ? AND key IN ({placeholders})",
+            (guild_id, *keys)
+        )
+        rows = await cursor.fetchall()
+    result = {k: None for k in keys}
+    result.update({r[0]: r[1] for r in rows})
+    return result
+
+
+async def set_states(guild_id: str, updates: dict[str, str]):
+    """Set multiple state keys in a single transaction."""
+    async with get_connection() as conn:
+        for key, value in updates.items():
+            await conn.execute(
+                """INSERT INTO bot_state (guild_id, key, value) VALUES (?, ?, ?)
+                   ON CONFLICT(guild_id, key) DO UPDATE SET value = excluded.value""",
+                (guild_id, key, value)
+            )
+        await conn.commit()
+
 
 async def delete_state(guild_id: str, key: str):
     async with get_connection() as conn:
@@ -476,12 +496,9 @@ async def create_word_game(guild_id: str, channel_id: str, message_id: str):
         await conn.commit()
 
 
-async def add_word(guild_id: str, word: str, contributor_id: str):
+async def add_word(guild_id: str, word: str, contributor_id: str, current_words: str):
+    new_words = f"{current_words} {word}".strip() if current_words else word
     async with get_connection() as conn:
-        game = await get_word_game(guild_id)
-        if not game:
-            return
-        new_words = f"{game['words']} {word}".strip() if game['words'] else word
         await conn.execute(
             """UPDATE word_games SET words = ?, last_contributor_id = ?, word_count = word_count + 1
                WHERE guild_id = ? AND active = 1""",
