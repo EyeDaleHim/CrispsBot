@@ -38,6 +38,26 @@ def get_db_stats():
 
 # ==================== CONNECTION WRAPPER ====================
 
+class MetricsqliteConnection:
+    """Wrapper for aiosqlite to track metrics locally."""
+    def __init__(self, conn):
+        self._conn = conn
+
+    async def execute(self, sql, params=None):
+        METRICS["queries"] += 1
+        return await self._conn.execute(sql, params or [])
+
+    async def executescript(self, sql):
+        METRICS["scripts"] += 1
+        return await self._conn.executescript(sql)
+
+    async def commit(self):
+        METRICS["commits"] += 1
+        return await self._conn.commit()
+
+    async def close(self):
+        return await self._conn.close()
+
 class TursoCursor:
     """Independent cursor wrapper for thread-safe reads."""
     def __init__(self, cursor):
@@ -100,12 +120,12 @@ async def _get_turso_connection():
 async def get_connection():
     """Get a database connection - works with both Turso and local SQLite"""
     if USE_TURSO:
-        # Reuse single persistent connection
         wrapper = await _get_turso_connection()
         yield wrapper
     else:
         async with aiosqlite.connect(DB_PATH) as conn:
-            yield conn
+            # Wrap the local connection to track metrics
+            yield MetricsqliteConnection(conn)
 
 
 # ==================== INIT ====================
