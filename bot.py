@@ -17,12 +17,15 @@ import os
 import yaml
 from pathlib import Path
 from collections import deque
+import time
 
 from dotenv import load_dotenv
 import config
 import db
 
 # ======================== SETUP ========================
+
+BOT_START_TIME = time.time()
 
 load_dotenv()
 
@@ -1265,6 +1268,43 @@ async def leaderboard_cmd(interaction: discord.Interaction):
 
 # ---------- Admin ----------
 
+@bot.tree.command(name="botstats", description="View bot performance and database metrics (debug)")
+@app_commands.default_permissions(administrator=True)
+async def botstats_cmd(interaction: discord.Interaction):
+    """Displays bot uptime and database performance metrics."""
+    await interaction.response.defer(ephemeral=True)
+    
+    # Calculate uptime
+    uptime_seconds = int(time.time() - BOT_START_TIME)
+    uptime_str = str(timedelta(seconds=uptime_seconds))
+    
+    # Get database metrics
+    db_stats = db.get_db_stats()
+    total_ops = db_stats["queries"] + db_stats["commits"] + db_stats["scripts"]
+    
+    # Simple rate calculation (ops per minute)
+    ops_per_min = (total_ops / (uptime_seconds / 60)) if uptime_seconds > 60 else total_ops
+
+    embed = discord.Embed(
+        title="🤖 Bot Performance Metrics",
+        color=discord.Color.blue(),
+        timestamp=datetime.now(timezone.utc)
+    )
+    
+    embed.add_field(name="Uptime", value=f"`{uptime_str}`", inline=True)
+    embed.add_field(name="Version", value=f"`{BOT_VERSION}`", inline=True)
+    
+    db_value = (
+        f"Queries: `{fmt_num(db_stats['queries'])}`\n"
+        f"Commits: `{fmt_num(db_stats['commits'])}`\n"
+        f"Scripts: `{fmt_num(db_stats['scripts'])}`\n"
+        f"Total Ops: `{fmt_num(total_ops)}`"
+    )
+    embed.add_field(name="Database Load", value=db_value, inline=False)
+    
+    embed.set_footer(text=f"Avg Load: {ops_per_min:.2f} ops/min")
+    
+    await interaction.followup.send(embed=embed)
 
 @bot.tree.command(name="chips", description="Set a user's chip balance (admin only)")
 @app_commands.default_permissions(administrator=True)

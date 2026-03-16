@@ -25,6 +25,16 @@ else:
     DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bot_data.db")
     print(f"[DB] Using local SQLite: {DB_PATH}")
 
+# ===================
+METRICS = {
+    "queries": 0,
+    "commits": 0,
+    "scripts": 0
+}
+
+def get_db_stats():
+    """Return a copy of the current DB metrics."""
+    return METRICS.copy()
 
 # ==================== CONNECTION WRAPPER ====================
 
@@ -46,6 +56,7 @@ class TursoConnection:
         self._lock = asyncio.Lock()  # Serialize writes/access to the shared connection
     
     async def execute(self, sql, params=None):
+        METRICS["queries"] += 1  # Track query count
         def _exec():
             return self._conn.execute(sql, params or [])
         async with self._lock:
@@ -53,10 +64,12 @@ class TursoConnection:
         return TursoCursor(result)
     
     async def executescript(self, sql):
+        METRICS["scripts"] += 1  # Track script executions
         async with self._lock:
             await asyncio.to_thread(self._conn.executescript, sql)
     
     async def commit(self):
+        METRICS["commits"] += 1  # Track commits
         async with self._lock:
             await asyncio.to_thread(self._conn.commit)
     
